@@ -1,5 +1,5 @@
-# stake-easy
-A Staking App with SSV Technology.
+# stake-easy-private
+Staking WebApp using SSV (Private)
 
 ## Getting Started
 
