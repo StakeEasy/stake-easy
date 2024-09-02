@@ -1,21 +1,23 @@
-import React from "react";
-
-function EigenpodAddress() {
-  return <div>Eigenpod Address</div>;
-}
-
-export default EigenpodAddress;
-import React, { useState } from "react";
-import { ClipboardCopy, CheckCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ClipboardCopy, CheckCircle, X, Info } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function EigenpodAddress() {
   const [address, setAddress] = useState("EigenPod Address not created yet");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+
+  useEffect(() => {
+    const hasSeenPopup = localStorage.getItem("hasSeenEigenPodPopup");
+    if (!hasSeenPopup) {
+      setShowPopup(true);
+      localStorage.setItem("hasSeenEigenPodPopup", "true");
+    }
+  }, []);
 
   const createPodAddress = () => {
     setLoading(true);
-    // Simulating address creation with a delay
     setTimeout(() => {
       setAddress("0x1234...5678");
       setLoading(false);
@@ -32,20 +34,67 @@ function EigenpodAddress() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  const openPopup = () => {
+    setShowPopup(true);
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-8  mx-auto transition-all duration-300 hover:shadow-xl">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+    <div className="relative bg-white border border-gray-200 rounded-lg shadow-lg p-8 mx-auto transition-all duration-300 hover:shadow-xl">
+      {/* Popup */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            className="absolute inset-0 flex justify-center items-center z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg relative"
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+            >
+              <button
+                onClick={closePopup}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-4">
+                Welcome to EigenPod Address Creation
+              </h3>
+              <p className="text-gray-600 mb-4">
+                This tool allows you to programmatically generate an EigenPod
+                address, making the setup process easier and more convenient.
+              </p>
+              <button
+                onClick={closePopup}
+                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
+              >
+                Got it!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Content with Blur Effect */}
+      <div
+        className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-300 ${
+          showPopup ? "blur-sm" : ""
+        }`}
+      >
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-red-500 mb-6">
             EigenPod Address Creation
           </h2>
-
           <p className="text-gray-600 leading-relaxed">
-            Programmatically generate an Eigenpod address for users, reducing
-            manual setup and enhancing convenience.
-          </p>
-          <p className="text-gray-600 leading-relaxed">
-            Programmatically generate an Eigenpod address for users, reducing
+            Programmatically generate an EigenPod address for users, reducing
             manual setup and enhancing convenience.
           </p>
         </div>
@@ -69,9 +118,9 @@ function EigenpodAddress() {
                 onClick={copyToClipboard}
               >
                 {copied ? (
-                  <CheckCircle className="w-5 h-5" />
+                  <CheckCircle className="w-6 h-6" />
                 ) : (
-                  <ClipboardCopy className="w-5 h-5" />
+                  <ClipboardCopy className="w-6 h-6" />
                 )}
               </button>
             </div>
@@ -95,6 +144,17 @@ function EigenpodAddress() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Button to Reopen Popup */}
+      <div className="mt-8 text-center">
+        <button
+          onClick={openPopup}
+          className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
+        >
+          <Info className="w-5 h-5 mr-2" />
+          Show Welcome Message
+        </button>
       </div>
     </div>
   );

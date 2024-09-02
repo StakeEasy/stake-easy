@@ -11,8 +11,9 @@ function Stepper() {
   const steps = [
     { title: "Personal Info", component: EigenpodAddress },
     { title: "Account Setup", component: KeyGeneration },
-    { title: "Confirmation", component: UploadDepositData },
+
     { title: "Completion", component: ValidatorRegistration },
+    { title: "Confirmation", component: UploadDepositData },
   ];
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -32,7 +33,7 @@ function Stepper() {
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
-    <div className="w-[70%] h-[70vh] mx-auto my-[50px] p-8 bg-transparent rounded-xl shadow-lg flex flex-col justify-between">
+    <div className="w-[80%] h-[70vh] mx-auto my-[50px] p-8 bg-transparent rounded-xl shadow-lg flex flex-col justify-between">
       <div className="mb-12 relative">
         <div className="flex justify-between items-center">
           {steps.map((step, index) => (
