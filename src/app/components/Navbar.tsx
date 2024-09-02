@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import styles from "../css/BtnShine.module.css";
 import Image from "next/image";
 import Hero from "../assets/logo.png";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const NavBar = () => {
   return (
@@ -30,6 +31,9 @@ const NavBar = () => {
               StakeEasy
             </div>
           </a>
+        </div>
+        <div className="flex items-center">
+          <ConnectButton />
         </div>
       </div>
     </div>
