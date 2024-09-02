@@ -1,25 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import EigenpodAddress from "../components/EigenpodAddress";
+import KeyGeneration from "../components/KeyGeneration";
+import UploadDepositData from "../components/UploadDepositData";
+import ValidatorRegistration from "../components/ValidatorRegistration";
 import { Check, ChevronRight, ChevronLeft } from "lucide-react";
 
 function Stepper() {
   const steps = [
-    { title: "Personal Info", fields: ["Full Name", "Email", "Phone Number"] },
-    { title: "Account Setup", fields: ["Username", "Password", "Preferences"] },
-    {
-      title: "Confirmation",
-      fields: ["Review Details", "Terms Agreement", "Submit"],
-    },
-    { title: "Completion", fields: [] },
+    { title: "Personal Info", component: EigenpodAddress },
+    { title: "Account Setup", component: KeyGeneration },
+    { title: "Confirmation", component: UploadDepositData },
+    { title: "Completion", component: ValidatorRegistration },
   ];
-  const [currentStep, setCurrentStep] = useState(0);
-  const [runTour, setRunTour] = useState(false);
 
-  useEffect(() => {
-    // Automatically start the tour when the component mounts
-    setRunTour(true);
-  }, []);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -32,8 +28,11 @@ function Stepper() {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  const CurrentStepComponent = steps[currentStep].component;
+
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white rounded-xl shadow-lg">
+    <div className="w-[70%] mx-auto p-8 bg-transparent rounded-xl shadow-lg">
       <div className="mb-12 relative">
         <div className="flex justify-between items-center">
           {steps.map((step, index) => (
@@ -43,7 +42,7 @@ function Stepper() {
             >
               <motion.div
                 className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${
-                  index <= currentStep ? "bg-red-500" : "bg-gray-300"
+                  index <= currentStep ? "bg-red-500 z-10" : "bg-gray-300 z-10"
                 }`}
                 animate={{
                   scale: index === currentStep ? 1.2 : 1,
@@ -64,7 +63,7 @@ function Stepper() {
           ))}
         </div>
 
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-300" />
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-gray-300 " />
         <motion.div
           className="absolute top-5 left-0 h-0.5 bg-red-500"
           initial={{ width: "0%" }}
@@ -73,25 +72,7 @@ function Stepper() {
         />
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-lg mb-8">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">
-          {steps[currentStep].title}
-        </h2>
-        <div className="space-y-4">
-          {steps[currentStep].fields.map((field, index) => (
-            <div key={index} className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 mb-1">
-                {field}
-              </label>
-              <input
-                type="text"
-                className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
-                placeholder={`Enter ${field.toLowerCase()}`}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+      <CurrentStepComponent />
 
       <div className="flex justify-between">
         <button
