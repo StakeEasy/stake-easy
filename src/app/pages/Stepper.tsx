@@ -72,12 +72,14 @@ function Stepper() {
         />
       </div>
 
-      <CurrentStepComponent />
+      <div className="overflow-y-auto custom-scrollbar">
+        <CurrentStepComponent />
+      </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-12">
         <button
           onClick={prevStep}
-          disabled={currentStep === 0}
+          disabled={currentStep === 0}  
           className="px-6 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors flex items-center"
         >
           <ChevronLeft size={20} className="mr-2" />
