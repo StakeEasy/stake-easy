@@ -1,10 +1,10 @@
 import React from "react";
-import { Table } from "@/components/ui/table"
+import OperatorSelectionTable from "./OperatorSelectionTable";
 
 function ValidatorRegistration() {
   return (
     <div>
-      <Table />
+      <OperatorSelectionTable />
     </div>
   );
 }
