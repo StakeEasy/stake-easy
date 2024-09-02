@@ -21,7 +21,7 @@ const NavBar = () => {
               style={{ width: "40px", color: "white" }}
             />
             <div
-              className="text-black ml-2 text-[26px] font-semibold tracking-wide logo"
+              className="ml-2 text-[26px] font-semibold tracking-wide logo"
               style={{
                 animation: "typing 4s steps(40, end) 4s infinite",
                 overflow: "hidden",
