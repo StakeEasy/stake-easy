@@ -50,7 +50,7 @@ function Stepper() {
               >
                 {index + 1}
               </motion.div>
-              <p
+              {/* <p
                 className={`mt-2 text-sm ${
                   index === currentStep
                     ? "font-medium text-gray-800"
@@ -58,7 +58,7 @@ function Stepper() {
                 }`}
               >
                 {step.title}
-              </p>
+              </p> */}
             </div>
           ))}
         </div>
