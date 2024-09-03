@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { ClipboardCopy, CheckCircle, X, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAccount } from 'wagmi';
+import { Contract, ethers } from 'ethers';
+import eigenPodManagerAbi from '../../../abi.json';
 
-function EigenpodAddress() {
-  const [address, setAddress] = useState("EigenPod Address not created yet");
+interface WindowWithEthereum extends Window {
+  ethereum?: any;
+}
+
+declare let window: WindowWithEthereum;
+
+const EigenpodAddress: React.FC = () => {
+  const { address, isConnected } = useAccount();
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [podAddress, setPodAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState("EigenPod Address not created yet");
 
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem("hasSeenEigenPodPopup");
@@ -16,20 +28,126 @@ function EigenpodAddress() {
     }
   }, []);
 
-  const createPodAddress = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setAddress("0x1234...5678");
-      setLoading(false);
-    }, 1000);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contractInstance = new Contract(
+        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
+        eigenPodManagerAbi,
+        signer
+      );
+      setContract(contractInstance);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isConnected) {
+      // Reset current address if no wallet is connected
+      setCurrentAddress("");
+    } else if (podAddress) {
+      setCurrentAddress(podAddress);
+    }
+  }, [isConnected, podAddress]);
+
+  const checkPodExists = async (): Promise<boolean> => {
+    if (!contract || !address) {
+      console.error('Contract or address not available');
+      return false;
+    }
+
+    try {
+      console.log('Checking if pod exists...');
+      const podExists = await contract.hasPod(address);
+      console.log("Pod exists:", podExists);
+      return podExists;
+    } catch (error) {
+      console.error('Error checking if pod exists:', error);
+      return false;
+    }
   };
 
-  const getPodAddress = () => {
-    alert(`Current EigenPod Address: ${address}`);
+  const getPodAddress = async (): Promise<string | null> => {
+    if (!contract || !address) {
+      console.error('Contract or address not available');
+      return null;
+    }
+
+    try {
+      console.log('Checking if pod exists...');
+      const podExists = await contract.hasPod(address);
+      console.log("Pod exists:", podExists);
+
+      if (podExists) {
+        const existingPod = await contract.getPod(address);
+        console.log("Pod address:", existingPod);
+        setPodAddress(existingPod);
+        return existingPod;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Error retrieving pod information:', error);
+      return null;
+    }
+  };
+
+  const createPod = async (): Promise<string | null> => {
+    if (!contract) {
+      console.error('Contract not available');
+      return null;
+    }
+
+    try {
+      console.log('Checking if pod already exists...');
+      console.log("Address: ", address);
+      const podExists = await contract.hasPod(address);
+
+      if (podExists) {
+        const existingPod = await contract.getPod(address);
+        alert(`Pod is already created! Pod address: ${existingPod}`);
+        console.log('Existing EigenPod address:', existingPod);
+        setPodAddress(existingPod);
+        return existingPod;
+      }
+
+      console.log('Creating pod...');
+      const tx = await contract.createPod();
+      console.log('Transaction sent:', tx.hash);
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt.transactionHash);
+
+      // Get the new pod address
+      const newPodAddress = await contract.getPod(address);
+      console.log('Your EigenPod address:', newPodAddress);
+
+      alert(`Pod created successfully! Pod address: ${newPodAddress}`);
+      setPodAddress(newPodAddress);
+      return newPodAddress;
+    } catch (error) {
+      console.error('Error creating EigenPod:', error);
+      alert('Error creating EigenPod. Check the console for details.');
+      return null;
+    }
+  };
+
+  const handleCreatePodAddress = async () => {
+    setLoading(true);
+    await createPod();
+    setLoading(false);
+  };
+
+  const handleGetPodAddress = async () => {
+    const existingAddress = await getPodAddress();
+    if (existingAddress) {
+      alert(`Current EigenPod Address: ${existingAddress}`);
+    } else {
+      alert("No EigenPod Address found.");
+    }
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(address);
+    navigator.clipboard.writeText(currentAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -107,7 +225,7 @@ function EigenpodAddress() {
             <div className="flex items-center bg-gray-50 border border-gray-300 rounded-md overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500">
               <input
                 type="text"
-                value={address}
+                value={currentAddress}
                 readOnly
                 className="flex-grow bg-transparent px-4 py-3 text-gray-800 focus:outline-none"
               />
@@ -128,7 +246,7 @@ function EigenpodAddress() {
 
           <div className="flex space-x-4">
             <button
-              onClick={createPodAddress}
+              onClick={handleCreatePodAddress}
               disabled={loading}
               className={`flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-300 ${
                 loading ? "opacity-75 cursor-not-allowed" : ""
@@ -137,7 +255,7 @@ function EigenpodAddress() {
               {loading ? "Creating..." : "Create Pod Address"}
             </button>
             <button
-              onClick={getPodAddress}
+              onClick={handleGetPodAddress}
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-300"
             >
               Get Pod Address

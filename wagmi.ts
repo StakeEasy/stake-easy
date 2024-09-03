@@ -1,4 +1,3 @@
-
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
   arbitrum,
@@ -8,17 +7,42 @@ import {
   polygon,
   sepolia,
 } from 'wagmi/chains';
+import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
+
+// Define the HoleSky chain configuration
+const holesky = {
+  id: 17000,
+  name: 'HoleSky',
+  network: 'holesky',
+  nativeCurrency: {
+    name: 'HoleSky Ether',
+    symbol: 'HSE',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://ethereum-holesky-rpc.publicnode.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'HoleSky Explorer',
+      url: 'https://holesky.etherscan.io',
+    },
+  },
+};
 
 export const config = getDefaultConfig({
-  appName: 'RainbowKit demo',
-  projectId: 'f8a6524307e28135845a9fe5811fcaa2',
+  appName: 'stake-easy',
+  projectId: '003cc2d44b51cb4325a4954fec3b28c6',
   chains: [
     mainnet,
     polygon,
     optimism,
     arbitrum,
     base,
-    // ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
+    holesky,
+    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
   ],
   ssr: true,
 });
