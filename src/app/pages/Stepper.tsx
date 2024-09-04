@@ -9,11 +9,10 @@ import { Check, ChevronRight, ChevronLeft } from "lucide-react";
 
 function Stepper() {
   const steps = [
-    { title: "Personal Info", component: EigenpodAddress },
-    { title: "Account Setup", component: KeyGeneration },
-
-    { title: "Completion", component: ValidatorRegistration },
-    { title: "Confirmation", component: UploadDepositData },
+    { title: "EigenpodAddress", component: EigenpodAddress },
+    { title: "KeyGeneration", component: KeyGeneration },
+    { title: "ValidatorRegistration", component: ValidatorRegistration },
+    { title: "UploadDepositData", component: UploadDepositData },
   ];
 
   const [currentStep, setCurrentStep] = useState(0);

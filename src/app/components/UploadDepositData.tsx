@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircle, Eye, EyeOff, CloudUpload, X, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion"
+
+
+enum STEPS {
+  START = 0,
+  ENTER_PASSWORD = 1,
+  DECRYPT_KEYSTORE = 2,
+  ENCRYPT_SHARES = 3,
+  FINISH = 4,
+}
 
 function UploadDepositData() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showPopup, setShowPopup] = useState(false);
+
+  const [step, setStep] = useState<STEPS>(STEPS.START);
+  const [keySharesData, setKeyShares] = useState<string>('');
+  const [finalPayload, setFinalPayload] = useState<string>('');
+  const [keystoreFile, setKeystoreFile] = useState<string>('');
+
 
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem("hasSeenUploadPopup");
@@ -16,14 +31,42 @@ function UploadDepositData() {
     }
   }, []);
 
-  const generateValidatorKey = () => {
-    console.log("Generating validator key with password:", password);
-    if (file) {
-      console.log("File uploaded:", file.name);
-      // You would typically make an API call here
-    } else {
-      console.log("No file uploaded");
+  const generateValidatorKey = async () => {
+
+    setStep(STEPS.DECRYPT_KEYSTORE);
+
+    try {
+      const response = await fetch('/api/process-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ keystoreFile, password }),
+      });
+      console.log("response: ", response);
+
+
+      if (!response.ok) {
+        throw new Error('Failed to process keystore');
+      }
+
+      const data = await response.json();
+      setFinalPayload(JSON.stringify(data.payload));
+      setKeyShares(JSON.stringify(data.keyShares));
+      console.log('KeyShares and Payload received from API');
+
+      const parsedPayload = JSON.parse(finalPayload);
+      const publicKey=parsedPayload.publicKey;
+      const operatorIds=parsedPayload.operatorIds;
+      const shares = parsedPayload.sharesData;
+
+      setStep(STEPS.FINISH);
+    } catch (e) {
+      alert((e as Error).message);
+      setStep(STEPS.ENTER_PASSWORD);
     }
+
+
   };
 
   const togglePasswordVisibility = () => {
@@ -32,9 +75,21 @@ function UploadDepositData() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          setKeystoreFile(result);
+        }
+      };
+
+      reader.readAsText(file); // Assuming the keystore file is in text or JSON format.
+      setFile(file);
     }
   };
+
 
   const closePopup = () => {
     setShowPopup(false);
@@ -68,11 +123,11 @@ function UploadDepositData() {
                 <X className="w-5 h-5" />
               </button>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-                Welcome to Upload Deposit Data
+                Welcome to Upload Keystore Data
               </h3>
               <p className="text-gray-600 mb-4">
-                This tool allows you to securely upload deposit data and
-                generate a validator key.
+                This tool allows you to upload keystore data and password
+                to generate the keyshares and distibute among the operators selected.
               </p>
               <button
                 onClick={closePopup}
@@ -87,22 +142,19 @@ function UploadDepositData() {
 
       {/* Main Content with Blur Effect */}
       <div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ${
-          showPopup ? "blur-sm" : ""
-        }`}
+        className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ${showPopup ? "blur-sm" : ""
+          }`}
       >
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-red-500 mb-6">
-            Upload Deposit Data
+            Upload Keystore File
           </h2>
 
           <p className="text-sm text-gray-600">
-            Programmatically generate an Eigenpod address for users, reducing
-            manual setup and enhancing convenience
+            SUbmit the keysotre file and corresponding password to generate the keyshares.
           </p>
           <p className="text-sm text-gray-600">
-            Programmatically generate an Eigenpod address for users, reducing
-            manual setup and enhancing convenience
+            Rest easy, we use proper encryption practises to ensure security of your password. We do not store the password at any place.
           </p>
         </div>
 
@@ -158,12 +210,12 @@ function UploadDepositData() {
             </div>
           </div>
 
-          {/* <button
+          <button
             onClick={generateValidatorKey}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded border border-blue-200 text-sm transition-colors duration-300"
           >
-            Generate validator key
-          </button> */}
+            Generate Keyshares
+          </button>
         </div>
       </div>
 

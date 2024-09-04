@@ -187,7 +187,7 @@ const EigenpodAddress: React.FC = () => {
                 Welcome to EigenPod Address Creation
               </h3>
               <p className="text-gray-600 mb-4">
-                This tool allows you to programmatically generate an EigenPod
+                This tool allows you to automatically generate an EigenPod
                 address, making the setup process easier and more convenient.
               </p>
               <button
@@ -212,8 +212,8 @@ const EigenpodAddress: React.FC = () => {
             EigenPod Address Creation
           </h2>
           <p className="text-gray-600 leading-relaxed">
-            Programmatically generate an EigenPod address for users, reducing
-            manual setup and enhancing convenience.
+            If you don't have an Eigenpod deployed yet, you can create one here automatically.
+            If you already have an Eigenpod, you can retrieve the address here.
           </p>
         </div>
 

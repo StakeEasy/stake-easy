@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../css/OperatorSelectionTable.css";
 
 // Define the type for an operator
@@ -12,43 +12,8 @@ interface Operator {
   mev: number;
 }
 
-// Mock data
-const operators: Operator[] = [
-  {
-    id: 690,
-    name: "Blockscape-ZeroG",
-    validators: 0,
-    performance: "0%",
-    yearlyFee: "25 SSV",
-    mev: 0,
-  },
-  {
-    id: 574,
-    name: "Operator 574",
-    validators: 0,
-    performance: "0%",
-    yearlyFee: "20 SSV",
-    mev: 0,
-  },
-  {
-    id: 939,
-    name: "Operator 939",
-    validators: 0,
-    performance: "0%",
-    yearlyFee: "20 SSV",
-    mev: 0,
-  },
-  {
-    id: 172,
-    name: "Operator 172",
-    validators: 0,
-    performance: "0%",
-    yearlyFee: "15 SSV",
-    mev: 0,
-  },
-];
-
 export default function OperatorSelectionTable() {
+  const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperators, setSelectedOperators] = useState<Operator[]>([]);
   const [clusterSize, setClusterSize] = useState<number>(4);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -59,6 +24,39 @@ export default function OperatorSelectionTable() {
     key: "id",
     direction: null,
   });
+
+  // Fetch data from the API
+  useEffect(() => {
+    const fetchOperators = async () => {
+      try {
+        const response = await fetch(
+          "https://api.ssv.network/api/v4/holesky/operators/graph?page=1&perPage=1000",
+          {
+            headers: {
+              accept: "*/*", // Optional, can be omitted
+            },
+          }
+        );
+        const data = await response.json();
+        
+        // Extract operators array from the response
+        const transformedOperators = data.operators.map((op: any) => ({
+          id: op.id,
+          name: op.name,
+          validators: 0, // Assuming validators are not provided, set to 0
+          performance: `${op.performance['30d'].toFixed(2)}%`, // Assuming '30d' performance is required
+          yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`, // Convert fee to SSV and format
+          mev: 0, // Assuming MEV is not provided, set to 0
+        }));
+        
+        setOperators(transformedOperators);
+      } catch (error) {
+        console.error("Failed to fetch operators:", error);
+      }
+    };
+
+    fetchOperators();
+  }, []); // Empty dependency array ensures this runs once on mount
 
   const handleRowSelection = (operator: Operator) => {
     setSelectedOperators((prev) => {
