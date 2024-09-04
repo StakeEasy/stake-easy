@@ -1,6 +1,6 @@
 'use client'
 import React, { useCallback, useState } from "react";
-import { SSVKeys, KeyShares, KeySharesItem } from 'ssv-keys';
+// import { SSVKeys, KeyShares, KeySharesItem } from 'ssv-keys';
 import Dropzone from "./Dropzone";
 import Spinner from "./Spinner";
 import { ethers } from "ethers";
@@ -18,9 +18,9 @@ enum STEPS {
 }
 
 const UserFlow: React.FC = () => {
-  const ssvKeys = new SSVKeys();
-  const keyShares = new KeyShares();
-  const keySharesItem = new KeySharesItem();
+  // const ssvKeys = new SSVKeys();
+  // const keyShares = new KeyShares();
+  // const keySharesItem = new KeySharesItem();
 
   const [step, setStep] = useState<STEPS>(STEPS.START);
   const [password, setPassword] = useState<string>('');
@@ -44,38 +44,25 @@ const UserFlow: React.FC = () => {
   const startProcess = async () => {
     setStep(STEPS.DECRYPT_KEYSTORE);
     try {
-      const { publicKey, privateKey } = await ssvKeys.extractKeys(keystoreFile, password);
-      setStep(STEPS.ENCRYPT_SHARES);
-      console.log('Private key ready');
-
-      const operators = operatorKeys.map((operator, index) => ({
-        id: operatorIds[index],
-        operatorKey: operator,
-      }));
-
-      const encryptedShares = await ssvKeys.buildShares(privateKey, operators);
-
-      const TEST_OWNER_NONCE = 1;
-      const TEST_OWNER_ADDRESS = '0x81592c3de184a3e2c0dcb5a261bc107bfa91f494';
-
-      const payload = await keySharesItem.buildPayload(
-        { publicKey, operators, encryptedShares },
-        { ownerAddress: TEST_OWNER_ADDRESS, ownerNonce: TEST_OWNER_NONCE, privateKey }
-      );
-
-      setFinalPayload(JSON.stringify(payload));
-      console.log('Payload ready');
-
-      keySharesItem.update({
-        ownerAddress: TEST_OWNER_ADDRESS,
-        ownerNonce: TEST_OWNER_NONCE,
-        operators,
-        publicKey
+      console.log('apiiiiiiiiii');
+      const response = await fetch('/api/process-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ keystoreFile, password }),
       });
+      console.log("response: ", response);
+      
 
-      keyShares.add(keySharesItem);
-      setKeyShares(keyShares.toJson());
-      console.log('KeyShares ready');
+      if (!response.ok) {
+        throw new Error('Failed to process keystore');
+      }
+
+      const data = await response.json();
+      setFinalPayload(JSON.stringify(data.payload));
+      setKeyShares(JSON.stringify(data.keyShares));
+      console.log('KeyShares and Payload received from API');
       setStep(STEPS.FINISH);
     } catch (e) {
       alert((e as Error).message);
