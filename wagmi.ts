@@ -9,7 +9,6 @@ import {
 } from 'wagmi/chains';
 import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 
-// Define the HoleSky chain configuration
 const holesky = {
   id: 17000,
   name: 'HoleSky',
@@ -38,6 +37,11 @@ export const config = getDefaultConfig({
   chains: [
     holesky,
     mainnet,
+    // arbitrum,
+    // base,
+    // optimism,
+    // polygon,
+    // sepolia,
   ],
   ssr: true,
 });

@@ -12,10 +12,15 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background: #171717;
 }
 /* Custom scrollbar styling */
 .custom-scrollbar::-webkit-scrollbar {
   width: 2px;
+}
+
+.connect{
+  padding: 30px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
