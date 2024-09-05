@@ -17,6 +17,7 @@ interface WindowWithEthereum extends Window {
 
 declare let window: WindowWithEthereum;
 
+
 const EigenpodAddress: React.FC = () => {
   const { address, isConnected } = useAccount();
   const [contract, setContract] = useState<Contract | null>(null);
@@ -27,16 +28,28 @@ const EigenpodAddress: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contractInstance = new Contract(
-        process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
-        eigenPodManagerAbi,
-        signer
-      );
-      setContract(contractInstance);
+    const hasSeenPopup = localStorage.getItem("hasSeenEigenPodPopup");
+    if (!hasSeenPopup) {
+      setShowPopup(true);
+      localStorage.setItem("hasSeenEigenPodPopup", "true");
     }
+  }, []);
+
+  useEffect(() => {
+    const initializeContract = async () => {
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        const signer = await provider.getSigner();
+        const contractInstance = new Contract(
+          process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
+          eigenPodManagerAbi,
+          signer
+        );
+        setContract(contractInstance);
+      }
+    };
+
+    initializeContract();
   }, []);
 
   useEffect(() => {
@@ -48,50 +61,6 @@ const EigenpodAddress: React.FC = () => {
     }
   }, [isConnected, podAddress]);
 
-  const checkPodExists = async (): Promise<boolean> => {
-    if (!contract || !address) {
-      console.error('Contract or address not available');
-      return false;
-    }
-
-    try {
-      console.log('Checking if pod exists...');
-      const podExists = await contract.hasPod(address);
-      console.log("Pod exists:", podExists);
-      return podExists;
-    } catch (error) {
-      console.error('Error checking if pod exists:', error);
-      return false;
-    }
-  };
-
-
-  const getPodAddress = async (): Promise<string | null> => {
-    console.log("getPodAddress called"); 
-    if (!contract || !address) {
-      console.error('Contract or address not available');
-      return null;
-    }
-  
-    try {
-      console.log('Checking if pod exists...');
-      const podExists = await contract.hasPod(address);
-      console.log("Pod exists:", podExists);
-  
-      if (podExists) {
-        const existingPod = await contract.getPod(address);
-        console.log("Pod address:", existingPod);
-        setPodAddress(existingPod);
-        return existingPod;
-      } else {
-        console.log("Pod does not exist."); 
-        return null;
-      }
-    } catch (error) {
-      console.error('Error retrieving pod information:', error);
-      return null;
-    }
-  };
 
   const createPod = async (): Promise<string | null> => {
     if (!contract) {
@@ -132,6 +101,51 @@ const EigenpodAddress: React.FC = () => {
     }
   };
 
+
+  const checkPodExists = async (): Promise<boolean> => {
+    if (!contract || !address) {
+      console.error('Contract or address not available');
+      return false;
+    }
+
+    try {
+      console.log('Checking if pod exists...');
+      const podExists = await contract.hasPod(address);
+      console.log("Pod exists:", podExists);
+      return podExists;
+    } catch (error) {
+      console.error('Error checking if pod exists:', error);
+      return false;
+    }
+  };
+
+  const getPodAddress = async (): Promise<string | null> => {
+    console.log("getPodAddress called"); 
+    if (!contract || !address) {
+      console.error('Contract or address not available');
+      return null;
+    }
+  
+    try {
+      console.log('Checking if pod exists...');
+      const podExists = await contract.hasPod(address);
+      console.log("Pod exists:", podExists);
+  
+      if (podExists) {
+        const existingPod = await contract.getPod(address);
+        console.log("Pod address:", existingPod);
+        setPodAddress(existingPod);
+        return existingPod;
+      } else {
+        console.log("Pod does not exist."); 
+        return null;
+      }
+    } catch (error) {
+      console.error('Error retrieving pod information:', error);
+      return null;
+    }
+  };
+
   const saveAddresses = async (walletAddress: string | undefined, eigenPodAddress: string) => {
     try {
       console.log("FETCHING...")
@@ -154,7 +168,7 @@ const EigenpodAddress: React.FC = () => {
       alert('Error in storing addresses.');
     }
   };
-  
+
   const handleCreatePodAddress = async () => {
     setLoading(true);
     const newPodAddress = await createPod();
@@ -165,21 +179,28 @@ const EigenpodAddress: React.FC = () => {
   };
   
 
-  const handleGetPodAddress = async () => {
-    console.log("handleGetPodAddress called");
-    const existingAddress = await getPodAddress();
-    console.log("Existing address:", existingAddress); 
-    
-    if (existingAddress) {
-      console.log("Calling API call function");
-      await saveAddresses(address, existingAddress);
-      alert(`Current EigenPod Address: ${existingAddress}`);
-    } else {
-      console.log("No EigenPod Address found.");
-      alert("No EigenPod Address found.");
-    }
-  };
+ const handleGetPodAddress = async () => {
+  console.log("handleGetPodAddress called");
+  const existingAddress = await getPodAddress();
+  console.log("Existing address:", existingAddress); 
   
+  if (existingAddress) {
+    console.log("Calling API call function");
+    await saveAddresses(address, existingAddress);
+    alert(`Current EigenPod Address: ${existingAddress}`);
+  } else {
+    console.log("No EigenPod Address found.");
+    alert("No EigenPod Address found.");
+  }
+};
+
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(currentAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const closePopup = () => {
     setShowPopup(false);
   };
@@ -188,15 +209,9 @@ const EigenpodAddress: React.FC = () => {
     setShowPopup(true);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(currentAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   return (
     <div
-      className="relative   mx-auto transition-all duration-300 w-[80%]"
+      className="relative mx-auto transition-all duration-300 w-[80%]"
       style={{
         background: "linear-gradient(to right, #1D1D1D 0%, #191919 100%)",
         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
@@ -204,45 +219,6 @@ const EigenpodAddress: React.FC = () => {
         borderRadius: "20px",
       }}
     >
-      {/* Popup */}
-      <AnimatePresence>
-        {showPopup && (
-          <motion.div
-            className="absolute inset-0 flex justify-center items-center z-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className=" p-6 rounded-lg shadow-xl w-[80%] max-w-lg relative"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-            >
-              <button
-                onClick={closePopup}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-                Welcome to EigenPod Address Creation
-              </h3>
-              <p className="text-gray-600 mb-4">
-                This tool allows you to programmatically generate an EigenPod
-                address, making the setup process easier and more convenient.
-              </p>
-              <button
-                onClick={closePopup}
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
-              >
-                Got it!
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main Content with Blur Effect */}
       <div
         className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-300 ${
@@ -250,7 +226,7 @@ const EigenpodAddress: React.FC = () => {
         }`}
       >
         <div className="space-y-4">
-        <h2
+          <h2
             className="text-2xl font-bold text-white mb-7"
             style={{ letterSpacing: "1px", fontWeight: "bold " }}
           >
@@ -260,14 +236,14 @@ const EigenpodAddress: React.FC = () => {
             className="text-white leading-relaxed w-[70%]"
             style={{ fontWeight: "200", fontSize: "14px" }}
           >
-            This tool allows you to programmatically generate an EigenPod
-            address, making the setup process easier and more convenient.
+            Programmatically generate an EigenPod address for users, reducing
+            manual setup and enhancing convenience.
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
-          <label
+            <label
               className="block text-sm font-medium text-[#CACACA] mb-2 "
               style={{
                 fontWeight: "200",
@@ -303,7 +279,7 @@ const EigenpodAddress: React.FC = () => {
           <div className="flex space-x-4">
             <button
               onClick={handleCreatePodAddress}
-              disabled={loading || !isConnected}
+              disabled={loading}
               className={`flex-1 bg-[#161515] text-white font-medium py-3 px-4 rounded-md text-sm transition-all duration-300 ${
                 loading ? "opacity-75 cursor-not-allowed" : ""
               }`}
@@ -335,16 +311,6 @@ const EigenpodAddress: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Button to Reopen Popup */}
-      <div className="mt-8 text-center relative">
-        <button
-          onClick={openPopup}
-          className=" absolute right-0 inline-flex items-center text-white py-2 px-4 rounded-md "
-        >
-          <MessageCircleQuestionIcon />
-        </button>
       </div>
     </div>
   );

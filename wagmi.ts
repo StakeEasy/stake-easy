@@ -6,30 +6,9 @@ import {
   optimism,
   polygon,
   sepolia,
+  holesky,
 } from 'wagmi/chains';
 import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
-
-const holesky = {
-  id: 17000,
-  name: 'HoleSky',
-  network: 'holesky',
-  nativeCurrency: {
-    name: 'HoleSky Ether',
-    symbol: 'HSE',
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://ethereum-holesky-rpc.publicnode.com'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'HoleSky Explorer',
-      url: 'https://holesky.etherscan.io',
-    },
-  },
-};
 
 export const config = getDefaultConfig({
   appName: 'stake-easy',

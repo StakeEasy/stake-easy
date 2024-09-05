@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence} from "framer-motion";
 import Image from "next/image";
 import {
   ChevronRight,
@@ -9,6 +9,8 @@ import {
   Key,
   Pencil,
   Upload,
+  X,
+  MessageCircleQuestionIcon,
 } from "lucide-react";
 import starImg from "../assets/Frame 5.png";
 
@@ -26,6 +28,8 @@ const steps = [
 
 function Stepper() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -37,6 +41,16 @@ function Stepper() {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const togglePopup = () => {
+    setIsPopupOpen(!isPopupOpen);
+  };
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+  const openPopup = () => {
+    setShowPopup(true);
   };
 
   const CurrentStepComponent = steps[currentStep].component;
@@ -88,7 +102,7 @@ function Stepper() {
         />
       </div>
 
-      <div className="overflow-auto custom-scrollbar ">
+      <div>
         <CurrentStepComponent />
       </div>
 
@@ -126,6 +140,67 @@ function Stepper() {
           <ChevronRight size={20} className="ml-2" />
         </button>
       </div>
+
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{
+                border: "1px solid transparent",
+                borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+                borderImageSlice: 1,
+                color: "white",
+                background: "linear-gradient(to right, #121212, #252525)",
+                boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
+                padding: "4rem 3rem",
+              }}
+              className=" rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
+            >
+              <div className="flex justify-between items-center mb-4 ">
+                <h1 className="text-white">Eigenpod address</h1>
+                <button
+                  style={{
+                    position: "absolute",
+                    right: "16px",
+                    top: "15px",
+                    borderRadius: "15px",
+                    border: "1px solid white",
+                    padding: "2px",
+                  }}
+                  onClick={closePopup}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div>
+                Programmatically generate an EigenPod address for users,
+                reducing manual setup and enhancing convenience.
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Button to Reopen Popup */}
+
+      <div className="mt-8 text-center relative">
+        <button
+          onClick={openPopup}
+          className=" absolute right-0 inline-flex items-center text-white py-2 px-4 rounded-md "
+        >
+          <MessageCircleQuestionIcon />
+        </button>
+      </div>
+
     </div>
   );
 }
