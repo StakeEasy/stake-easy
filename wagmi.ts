@@ -36,13 +36,8 @@ export const config = getDefaultConfig({
   appName: 'stake-easy',
   projectId: '003cc2d44b51cb4325a4954fec3b28c6',
   chains: [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
     holesky,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
+    mainnet,
   ],
   ssr: true,
 });
