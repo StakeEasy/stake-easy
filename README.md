@@ -1,5 +1,5 @@
 # EasyStake
-Staking WebApp using SSV (Private)
+(Re)staking WebApp using SSV Tech
 
 ## Overview
 EasyStake is a Restaking Application designed to simplify the process of creating and managing Ethereum validators using SSV's tooling. The platform provides a seamless, user-friendly experience by consolidating multiple steps into a single application. This solution enhances user experience and streamlines validator management through programmatic automation and integration with key Ethereum technologies.
