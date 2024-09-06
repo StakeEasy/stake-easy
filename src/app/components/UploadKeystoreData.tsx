@@ -13,9 +13,10 @@ enum STEPS {
 
 interface UploadKeystoreDataProps {
   goBack: () => void; 
+  operatorsData: any;
 }
 
-function UploadKeystoreData({ goBack }: UploadKeystoreDataProps) {
+function UploadKeystoreData({ goBack,operatorsData }: UploadKeystoreDataProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -25,8 +26,12 @@ function UploadKeystoreData({ goBack }: UploadKeystoreDataProps) {
   const [keySharesData, setKeyShares] = useState<string>('');
   const [finalPayload, setFinalPayload] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
+  const [parsedPayload, setParsedPayload] = useState<any>({});
 
-  const generateValidatorKey = async () => {
+
+
+  // console.log("operatorsData",operatorsData);
+  const handleSelectTime  = async () => {
     setStep(STEPS.DECRYPT_KEYSTORE);
 
     try {
@@ -35,30 +40,44 @@ function UploadKeystoreData({ goBack }: UploadKeystoreDataProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ keystoreFile, password }),
+        body: JSON.stringify({ keystoreFile, password, operatorsData }),
       });
       console.log("response: ", response);
-
 
       if (!response.ok) {
         throw new Error('Failed to process keystore');
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+  
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+  
+      console.log("Parsed data:", data);
+  
       setFinalPayload(JSON.stringify(data.payload));
       setKeyShares(JSON.stringify(data.keyShares));
       console.log('KeyShares and Payload received from API');
-
-      const parsedPayload = JSON.parse(finalPayload);
-      const publicKey=parsedPayload.publicKey;
-      const operatorIds=parsedPayload.operatorIds;
-      const shares = parsedPayload.sharesData;
-
+  
+      const parsedPayload = data.payload;
+      setParsedPayload(parsedPayload);
+      // const publicKey = parsedPayload.publicKey;
+      // const operatorIds = parsedPayload.operatorIds;
+      // const shares = parsedPayload.sharesData;
+  
       setStep(STEPS.FINISH);
     } catch (e) {
+      console.error("Error in handleSelectTime:", e);
       alert((e as Error).message);
       setStep(STEPS.ENTER_PASSWORD);
     }
+  
+    setShowSelectTime(true);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,16 +101,13 @@ function UploadKeystoreData({ goBack }: UploadKeystoreDataProps) {
     setShowPassword(!showPassword);
   };
 
-  const handleSelectTime = () => {
-    setShowSelectTime(true);
-  };
 
   const goBackToSelectTime = () => {
     setShowSelectTime(false);
   };
 
   if (showSelectTime) {
-    return <SelectTime goBack={goBackToSelectTime} />;
+    return <SelectTime goBack={goBackToSelectTime} parsedPayload={parsedPayload} />;
   }
 
   return (

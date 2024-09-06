@@ -109,3 +109,27 @@ tbody tr:hover {
 .empty-operator {
   border: 1px dashed #4a5568;
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  border: 1px solid #A257EC;
+  background: #161515;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pagination-button:hover {
+  background: linear-gradient(to right, #A257EC, #DA619C);
+}
+
+.pagination-button.active {
+  background: linear-gradient(to right, #A257EC, #DA619C);
+}

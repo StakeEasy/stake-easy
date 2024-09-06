@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SSVKeys, KeyShares, KeySharesItem } from 'ssv-keys';
-import operatorKeys from '../../utils/operators.json';
-import operatorIds from '../../utils/operatorIds.json';
+
 
 // Handle POST request
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { keystoreFile, password } = body;
+    const { keystoreFile, password , operatorsData} = body;
+    console.log(operatorsData,"operatorsData");
 
-    if (!keystoreFile || !password) {
+    if (!keystoreFile || !password || !operatorsData) {
       return NextResponse.json({ message: 'Missing keystore file or password' }, { status: 400 });
     }
 
@@ -24,10 +24,12 @@ export async function POST(req: NextRequest) {
 
     console.log('Keys extracted:', { publicKey, privateKey });
 
-    const operators = operatorKeys.map((operator, index) => ({
-      id: operatorIds[index],
-      operatorKey: operator,
+    const operators = operatorsData.map((operator: { id: any; address: any; }) => ({
+      id: operator.id,
+      operatorKey: operator.address,
     }));
+
+    console.log('Operators:', operators);
 
     console.log('Building shares with operators...');
     const encryptedShares = await ssvKeys.buildShares(privateKey, operators);

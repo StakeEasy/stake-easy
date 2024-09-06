@@ -7,12 +7,15 @@ import { Info } from "lucide-react";
 
 interface SelectTimeProps {
   goBack: () => void;
+  parsedPayload: any; // Add this line to include the new prop
 }
 
-const StakingInterface = ({ goBack }: SelectTimeProps) => {
+const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [customPeriod, setCustomPeriod] = useState<number | string>(0);
   const [showTxDetails, setShowTxDetails] = useState(false);
+
+  console.log("parsedPayload: ", parsedPayload);
 
   const handleCustomPeriodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -36,7 +39,7 @@ const StakingInterface = ({ goBack }: SelectTimeProps) => {
   };
 
   if (showTxDetails) {
-    return <TransactionDetails goBack={goBackToTransactionDetails} />;
+    return <TransactionDetails goBack={goBackToTransactionDetails} parsedPayload={parsedPayload} />;
   }
 
   const getNetworkFee = () => {

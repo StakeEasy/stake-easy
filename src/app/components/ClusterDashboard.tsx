@@ -2,7 +2,7 @@
 import React from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Image } from "next/image";
+import Image from "next/image";
 
 const ClusterDashboard: React.FC = () => {
   const router = useRouter();
@@ -99,25 +99,33 @@ const ClusterDashboard: React.FC = () => {
           <div className="flex-1 truncate">6040...7c3e</div>
           <div className="flex-1 flex space-x-2">
             {/* Icons for operators */}
-            <img
+            <Image
               src="/icons/operator1.svg"
               alt="Operator 1"
               className="h-6 w-6"
+              width={24}
+              height={24}
             />
-            <img
+            <Image
               src="/icons/operator2.svg"
               alt="Operator 2"
               className="h-6 w-6"
+              width={24}
+              height={24}
             />
-            <img
+            <Image
               src="/icons/operator3.svg"
               alt="Operator 3"
               className="h-6 w-6"
+              width={24}
+              height={24}
             />
-            <img
+            <Image
               src="/icons/operator4.svg"
               alt="Operator 4"
               className="h-6 w-6"
+              width={24}
+              height={24}
             />
           </div>
           <div className="flex-1">1</div>

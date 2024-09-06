@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from 'wagmi';
 import { Contract, ethers } from 'ethers';
-import eigenPodManagerAbi from '../../../abi.json';
+import eigenPodManagerAbi from '../utils/eigenpodABI.json';
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;

@@ -6,15 +6,19 @@ import DownArrow2 from "../assets/DownArrow2.png";
 import UpDownArrow from "../assets/UpDownArrow.png";
 import UploadKeystoreData from "./UploadKeystoreData";
 import "../css/OperatorSelectionTable.css";
+import icon from "../assets/icon.png";
+import { Url } from "next/dist/shared/lib/router/router";
 
 // Define the type for an operator
 interface Operator {
   id: number;
+  address: string;
   name: string;
   validators: number;
   performance: string;
   yearlyFee: string;
   mev: number;
+  image: string;
 }
 
 export default function OperatorSelectionTable() {
@@ -31,9 +35,21 @@ export default function OperatorSelectionTable() {
     direction: null,
   });
 
-  const [totalFee, setTotalFee] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch data from the API
+  const [totalFee, setTotalFee] = useState<number>(0); // State for total fee
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [operatorsPerPage] = useState(10);
+
+  useEffect(() => {
+    if (selectedOperators.length > clusterSize) {
+      // If selected operators exceed the new cluster size, trim the list
+      setSelectedOperators(selectedOperators.slice(0, clusterSize));
+    }
+  }, [clusterSize]);
+
   useEffect(() => {
     const fetchOperators = async () => {
       try {
@@ -51,11 +67,13 @@ export default function OperatorSelectionTable() {
         if (data.operators && Array.isArray(data.operators)) {
           const transformedOperators = data.operators.map((op: any) => ({
             id: op.id,
+            address: op.public_key,
             name: op.name,
-            validators: 0, // Assuming validators are not provided, set to 0
-            performance: `${op.performance['30d'].toFixed(2)}%`, // Assuming '30d' performance is required
-            yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`, // Convert fee to SSV and format
-            mev: 0, // Assuming MEV is not provided, set to 0
+            validators: op.validators_count,
+            performance: `${op.performance["30d"].toFixed(2)}%`,
+            yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`,
+            mev: 0,
+            image: op.logo
           }));
           
           setOperators(transformedOperators);
@@ -64,11 +82,16 @@ export default function OperatorSelectionTable() {
         }
       } catch (error) {
         console.error("Failed to fetch operators:", error);
+      } finally {
+        setLoading(false); // Set loading to false when data is fetched or on error
       }
     };
 
     fetchOperators();
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
+  
+  console.log(selectedOperators);
+  // Empty dependency array ensures this runs once on mount
 
   // Function to calculate the total fee
   const calculateTotalFee = (selectedOps: Operator[]) => {
@@ -133,22 +156,45 @@ export default function OperatorSelectionTable() {
       return 0;
     });
 
-    const handleKeystoreUpload = () => {
-      setShowKeystoreUpload(true);
-    }
+  // Get current operators
+  const indexOfLastOperator = currentPage * operatorsPerPage;
+  const indexOfFirstOperator = indexOfLastOperator - operatorsPerPage;
+  const currentOperators = filteredAndSortedOperators.slice(
+    indexOfFirstOperator,
+    indexOfLastOperator
+  );
 
-    const goBackToOperatorSelection = () => {
-      setShowKeystoreUpload(false);
-    };
-  
-    if (showKeystoreUpload) {
-      return <UploadKeystoreData goBack={goBackToOperatorSelection} />;
-    }
+  // Calculate total pages
+  const totalPages = Math.ceil(
+    filteredAndSortedOperators.length / operatorsPerPage
+  );
+
+  // Change page
+  const nextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  };
+
+  const prevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
+  const handleKeystoreUpload = () => {
+    setShowKeystoreUpload(true);
+  };
+
+  // Function to go back to the operator selection table
+  const goBackToOperatorSelection = () => {
+    setShowKeystoreUpload(false);
+  };
+
+  if (showKeystoreUpload) {
+    return <UploadKeystoreData goBack={goBackToOperatorSelection} operatorsData={selectedOperators}/>;
+  }
 
   return (
     <div className="operator-selection-container z-10">
       <div className="table-container">
-      <h1 className="text-2xl font-semibold">Select Operators</h1>
+        <h1 className="text-2xl font-semibold">Select Operators</h1>
         <div className="flex justify-between items-center">
           <h2>Pick the cluster of network operators to run your validator</h2>
           <div className="cluster-size-selector">
@@ -158,12 +204,12 @@ export default function OperatorSelectionTable() {
                 onClick={() => setClusterSize(size)}
                 style={{
                   border: "1px solid transparent",
-                  borderImage: 
-                      "linear-gradient(to right, #A257EC 0% , #DA619C 60%)",
+                  borderImage:
+                    "linear-gradient(to right, #A257EC 0% , #DA619C 60%)",
                   borderImageSlice: 1,
                   color: "white",
-                  background: 
-                      "linear-gradient(to right, #121212 0%, #252525 60%)",
+                  background:
+                    "linear-gradient(to right, #121212 0%, #252525 60%)",
                 }}
                 className={clusterSize === size ? "active" : ""}
               >
@@ -179,106 +225,186 @@ export default function OperatorSelectionTable() {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              // style={{width: '60px'}}
             />
             <span className="search-icon">🔍</span>
           </div>
-          {/* <button
-            className="filter-button"
-            style={{
-              border: "1px solid transparent",
-              borderImage: "linear-gradient(180deg, #FFA800 0%, #DA619C 100%",
-              borderImageSlice: 1,
-              background: "linear-gradient(180deg, #FFA800 0%, #DA619C 100%",
-              WebkitBackgroundClip: "text",
-            }}
-          >
-            <span className="filter-icon">
-              <Image src={Filter} alt="Ascending" width={20} height={20} />
-            </span>{" "}
-            Filters
-          </button> */}
         </div>
-        <table>
-          <thead>
-            <tr className="border border-gray-500">
-              <th className=""></th>
-              <th className="cursor-pointer" onClick={() => handleSort("id")}>
-                <span className="flex items-center gap-2">
-                  ID {renderSortIcon("id")}
-                </span>
-              </th>
-              <th className="cursor-pointer" onClick={() => handleSort("name")}>
-                <span className="flex items-center gap-2">
-                  Name {renderSortIcon("name")}
-                </span>
-              </th>
-              <th
-                className="cursor-pointer"
-                onClick={() => handleSort("validators")}
-              >
-                <span className="flex items-center gap-2">
-                  Validators {renderSortIcon("validators")}
-                </span>
-              </th>
-              <th
-                className="cursor-pointer"
-                onClick={() => handleSort("performance")}
-              >
-                <span className="flex items-center gap-2">
-                  30d performance {renderSortIcon("performance")}
-                </span>
-              </th>
-              <th
-                className="cursor-pointer"
-                onClick={() => handleSort("yearlyFee")}
-              >
-                <span className="flex items-center gap-2">
-                  Yearly Fee {renderSortIcon("yearlyFee")}
-                </span>
-              </th>
-              <th className="cursor-pointer" onClick={() => handleSort("mev")}>
-                <span className="flex items-center gap-2">
-                  MEV {renderSortIcon("mev")}
-                </span>
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredAndSortedOperators.map((operator) => (
-              <tr
-                key={operator.id}
-                // onClick={() => handleRowSelection(operator)}
-                className="border border-gray-400 cursor-none"
-              >
-                <td>
-                <input
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering row click
-                      handleRowSelection(operator); // Manually trigger the selection logic
-                    }}
-                    type="checkbox"
-                    className="mr-2 custom-checkbox"
-                    checked={selectedOperators.some(
-                      (op) => op.id === operator.id
-                    )}
-                    onChange={() => {}}
-                  />
-                </td>
-                <td>{operator.id}</td>
-                <td>{operator.name}</td>
-                <td>{operator.validators}</td>
-                <td>{operator.performance}</td>
-                <td>{operator.yearlyFee}</td>
-                <td>{operator.mev}</td>
+        <div
+          className={`operator-table ${operators.length > 4 ? "scroll" : ""}`}
+        >
+          <table>
+            <thead>
+              <tr className="border border-gray-500">
+                <th className=""></th>
+                <th className="cursor-pointer" onClick={() => handleSort("id")}>
+                  <span className="flex items-center gap-2">
+                    ID {renderSortIcon("id")}
+                  </span>
+                </th>
+                <th
+                  className="cursor-pointer"
+                  onClick={() => handleSort("name")}
+                >
+                  <span className="flex items-center gap-2 ml-[2rem]">
+                    Name {renderSortIcon("name")}
+                  </span>
+                </th>
+                <th
+                  className="cursor-pointer"
+                  onClick={() => handleSort("validators")}
+                >
+                  <span className="flex items-center gap-2">
+                    Validators {renderSortIcon("validators")}
+                  </span>
+                </th>
+                <th
+                  className="cursor-pointer"
+                  onClick={() => handleSort("performance")}
+                >
+                  <span className="flex items-center gap-2">
+                    30d performance {renderSortIcon("performance")}
+                  </span>
+                </th>
+                <th
+                  className="cursor-pointer"
+                  onClick={() => handleSort("yearlyFee")}
+                >
+                  <span className="flex items-center gap-2">
+                    Yearly Fee {renderSortIcon("yearlyFee")}
+                  </span>
+                </th>
+                <th
+                  className="cursor-pointer"
+                  onClick={() => handleSort("mev")}
+                >
+                  <span className="flex items-center gap-2">
+                    MEV {renderSortIcon("mev")}
+                  </span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {/* linear-gradient(180deg, #FFA800 0%, #DA619C 100% */}
+            </thead>
+            <tbody>
+              {loading
+                ? // Render 10 skeleton loaders when data is being fetched
+                  Array(15)
+                    .fill(null)
+                    .map((_, index) => (
+                      <tr key={index} className="animate-pulse">
+                        {/* Checkbox */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-5 rounded"></div>
+                        </td>
+                        {/* ID */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-8 rounded"></div>
+                        </td>
+                        {/* Name with Image */}
+                        <td>
+                          <div className="flex items-center">
+                            <div className="bg-gray-300 h-6 w-6 rounded-full"></div>
+                            <div className="bg-gray-300 h-5 w-24 rounded ml-2"></div>
+                          </div>
+                        </td>
+                        {/* Validators */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-8 rounded"></div>
+                        </td>
+                        {/* 30d performance */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-16 rounded"></div>
+                        </td>
+                        {/* Yearly Fee */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-16 rounded"></div>
+                        </td>
+                        {/* MEV */}
+                        <td>
+                          <div className="bg-gray-300 h-5 w-8 rounded"></div>
+                        </td>
+                      </tr>
+                    ))
+                : currentOperators.map((operator) => (
+                    <tr
+                      key={operator.id}
+                      onClick={() => handleRowSelection(operator)}
+                      className="border border-gray cursor-none"
+                    >
+                      <td>
+                        <input
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRowSelection(operator);
+                          }}
+                          type="checkbox"
+                          className="mr-2 custom-checkbox"
+                          checked={selectedOperators.some(
+                            (op) => op.id === operator.id
+                          )}
+                          onChange={() => {}}
+                        />
+                      </td>
+                      <td>{operator.id}</td>
+                      <td>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          <Image
+                            src={operator.image}
+                            alt=""
+                            style={{ 
+                              borderRadius: "20px",
+                              padding: "3px",
+                              border: "1px solid #A6A6A6",
+                              background:
+                                "linear-gradient(to right, #1d1d1d, #191919)",
+                            }}
+                            width={24}
+                            height={24}
+                          />
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            verticalAlign: "middle",
+                            marginLeft: "8px",
+                          }}
+                        >
+                          {operator.name}
+                        </span>
+                      </td>
+                      <td>{operator.validators}</td>
+                      <td>{operator.performance}</td>
+                      <td>{operator.yearlyFee}</td>
+                      <td>{operator.mev}</td>
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
+          {/* Pagination */}
+          <div className="pagination flex items-center gap-2">
+            <button
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              className="pagination-button"
+            >
+              Previous
+            </button>
+            <span className="pagination-info">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={nextPage}
+              disabled={currentPage === totalPages}
+              className="pagination-button"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
-
       <div className="flex flex-col justify-between">
         <div className="selected-operators">
           <div className="mb-[6px] flex justify-between items-center">
@@ -289,18 +415,25 @@ export default function OperatorSelectionTable() {
             </div>
           </div>
 
-          {selectedOperators.map((operator, index) => (
-            <div
-              key={operator.id}
-              className="relative p-[1px] rounded-lg bg-gradient-to-b from-[#A257EC] to-[#DA619C] mb-2"
-            >
-              <div className="flex items-center justify-center h-full w-full bg-[#161515] rounded-lg text-white py-3">
-                {operator.name} (Operator {String(index + 1).padStart(2, "0")})
+          <div
+            className={`selected-operators ${
+              selectedOperators.length > 4 ? "scroll" : ""
+            }`}
+          >
+            {selectedOperators.map((operator, index) => (
+              <div
+                key={operator.id}
+                className="relative p-[1px] rounded-lg bg-gradient-to-b from-[#A257EC] to-[#DA619C] mb-2"
+              >
+                <div className="flex items-center justify-center h-full w-full bg-[#161515] rounded-lg text-white py-3">
+                  {operator.name} (Operator {String(index + 1).padStart(2, "0")}
+                  )
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
-          {Array(clusterSize - selectedOperators.length)
+          {Array(Math.max(clusterSize - selectedOperators.length, 0))
             .fill(null)
             .map((_, index) => (
               <div

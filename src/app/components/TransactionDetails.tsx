@@ -4,18 +4,64 @@ import { Copy, CheckCircle, ArrowLeft } from "lucide-react";
 import Operator from "./Operator";
 import { Info } from "lucide-react";
 import { Tooltip } from "antd";
+import { ethers } from "ethers";
+import contractABI from "../utils/ssvABI.json";
+import { useAccount } from 'wagmi';
 
 interface TransactionProps {
   goBack: () => void; 
+  parsedPayload: any;
 }
 
-const Tx = ({ goBack }: TransactionProps) => {
+const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
   const [copied, setCopied] = useState(false);
+
+  const { address, isConnected, chain } = useAccount();
+  // const provider = new ethers.providers.Web3Provider(window.ethereum);
+  // const signer = provider.getSigner();
+  // console.log("signerrrrrrrrrrrrrrrrrrr",signer);
 
   const copyToClipboard = () => {
     // navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleContractInteraction = async (parsedPayload: any) => {
+    try {
+      // Check if MetaMask is installed
+      if (typeof window.ethereum !== 'undefined') {
+        // Request account access
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        // Create a Web3Provider instance
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        // Get the signer
+        const signer = provider.getSigner();
+        
+        // Contract address
+        const contractAddress = "0x5Dbf9a62BbcC8135AF60912A8B0212a73e4a6629";
+        
+        // Create a contract instance
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
+        
+        const { publicKey, operatorIds, sharesData } = parsedPayload;
+        
+        const amount = ethers.utils.parseEther("1.5"); // Convert 1.5 SSV to Wei
+        const cluster = [0, 0, 0, true, 0];
+        
+        // Execute contract function
+        const transaction = await contract.registerValidator(publicKey, operatorIds, sharesData, amount, cluster);
+        const receipt = await transaction.wait();
+        
+        console.log("Transaction receipt:", receipt);
+      } else {
+        console.error("MetaMask is not installed");
+      }
+    } catch (error) {
+      console.error("Error during contract interaction:", error);
+    }
   };
 
   return (
@@ -128,6 +174,7 @@ const Tx = ({ goBack }: TransactionProps) => {
         </div>
         <div className="flex justify-center p-4 gap-4">
           <button
+            onClick={() => handleContractInteraction(parsedPayload)}
             className="flex-1 font-bold text-white py-2 px-4 rounded"
             style={{
               border: "1px solid transparent",
