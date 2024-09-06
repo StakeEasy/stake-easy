@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Eye, EyeOff, CloudUpload, X, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion"
-
+import { CheckCircle, Eye, EyeOff, CloudUpload, X, Info, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import SelectTime from "./SelectTime";
 
 enum STEPS {
   START = 0,
@@ -11,28 +11,22 @@ enum STEPS {
   FINISH = 4,
 }
 
-function UploadDepositData() {
+interface UploadKeystoreDataProps {
+  goBack: () => void; 
+}
+
+function UploadKeystoreData({ goBack }: UploadKeystoreDataProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showSelectTime, setShowSelectTime] = useState(false);
 
   const [step, setStep] = useState<STEPS>(STEPS.START);
   const [keySharesData, setKeyShares] = useState<string>('');
   const [finalPayload, setFinalPayload] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
 
-
-  useEffect(() => {
-    const hasSeenPopup = localStorage.getItem("hasSeenUploadPopup");
-    if (!hasSeenPopup) {
-      setShowPopup(true);
-      localStorage.setItem("hasSeenUploadPopup", "true");
-    }
-  }, []);
-
   const generateValidatorKey = async () => {
-
     setStep(STEPS.DECRYPT_KEYSTORE);
 
     try {
@@ -65,12 +59,6 @@ function UploadDepositData() {
       alert((e as Error).message);
       setStep(STEPS.ENTER_PASSWORD);
     }
-
-
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,92 +73,68 @@ function UploadDepositData() {
         }
       };
 
-      reader.readAsText(file); // Assuming the keystore file is in text or JSON format.
+      reader.readAsText(file);
       setFile(file);
     }
   };
 
-
-  const closePopup = () => {
-    setShowPopup(false);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
-  const openPopup = () => {
-    setShowPopup(true);
+  const handleSelectTime = () => {
+    setShowSelectTime(true);
   };
+
+  const goBackToSelectTime = () => {
+    setShowSelectTime(false);
+  };
+
+  if (showSelectTime) {
+    return <SelectTime goBack={goBackToSelectTime} />;
+  }
 
   return (
-    <div className="relative bg-white border border-gray-200 rounded-lg shadow-sm p-8 mx-auto">
-      {/* Popup */}
-      <AnimatePresence>
-        {showPopup && (
-          <motion.div
-            className="absolute inset-0 flex justify-center items-center z-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg relative"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-            >
-              <button
-                onClick={closePopup}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-                Welcome to Upload Keystore Data
-              </h3>
-              <p className="text-gray-600 mb-4">
-                This tool allows you to upload keystore data and password
-                to generate the keyshares and distibute among the operators selected.
-              </p>
-              <button
-                onClick={closePopup}
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
-              >
-                Got it!
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="">
+      <button onClick={goBack} className="flex items-center mb-4 text-white ">
+        <ArrowLeft className="w-5 h-5 mr-2" />
+        Back
+      </button>
       {/* Main Content with Blur Effect */}
-      <div
-        className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ${showPopup ? "blur-sm" : ""
-          }`}
-      >
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-red-500 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ">
+        <div className="flex flex-col justify-center">
+          <h2
+            className="text-2xl font-bold mb-3"
+            style={{
+              background: "linear-gradient(to right, #DA619C, #FF844A)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
             Upload Keystore File
           </h2>
 
-          <p className="text-sm text-gray-600">
-            SUbmit the keysotre file and corresponding password to generate the keyshares.
+          <p className="text-md text-white">
+            Submit the keysotre file and corresponding password to generate the keyshares.
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-md text-white">
             Rest easy, we use proper encryption practises to ensure security of your password. We do not store the password at any place.
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
-            <div className="flex flex-col items-center justify-center bg-gray-50 border border-gray-300 rounded-md overflow-hidden p-6 transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500">
+            <div className="flex flex-col items-center justify-center bg-[#161515] rounded-md overflow-hidden p-6 transition-all duration-300 focus-within:ring-1 focus-within:ring-blue-500">
               <label
                 htmlFor="file-upload"
                 className="cursor-pointer flex flex-col items-center"
               >
                 {file ? (
-                  <CheckCircle className="h-12 w-12 text-gray-500 mb-4" />
+                  <CheckCircle className="h-16 w-16 p-4 bg-gradient-to-b from-[#FC8151] to-[#C951C0] text-white rounded-full" />
                 ) : (
-                  <CloudUpload className="h-12 w-12 text-gray-500 mb-4" />
+                  <CloudUpload className="h-16 w-16 mb-4 p-4 bg-gradient-to-b from-[#FC8151] to-[#C951C0] text-white rounded-full" />
                 )}
-                <p className="text-gray-500 mb-2">
+                <p className="text-white">
                   {file ? file.name : "Drag file to upload or browse"}
                 </p>
               </label>
@@ -185,52 +149,50 @@ function UploadDepositData() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
               Password
             </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 pr-10"
-                placeholder="Enter password"
-              />
+            <div className="flex gap-4">
+              <div className="grow relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 bg-transparent text-white border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-orange-400 pr-10"
+                  placeholder="Enter password"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-300 hover:text-white"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
               <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                onClick={togglePasswordVisibility}
+                onClick={handleSelectTime}
+                style={{
+                  border: "1px solid transparent",
+                  borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
+                  borderImageSlice: 1,
+                  background: "linear-gradient(to right, #DA619C, #FF844A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+                className=" grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold"
               >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
+                Next
               </button>
             </div>
           </div>
-
-          <button
-            onClick={generateValidatorKey}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded border border-blue-200 text-sm transition-colors duration-300"
-          >
-            Generate Keyshares
-          </button>
         </div>
-      </div>
-
-      {/* Button to Reopen Popup */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={openPopup}
-          className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
-        >
-          <Info className="w-5 h-5 mr-2" />
-          Show Welcome Message
-        </button>
       </div>
     </div>
   );
 }
 
-export default UploadDepositData;
+export default UploadKeystoreData;

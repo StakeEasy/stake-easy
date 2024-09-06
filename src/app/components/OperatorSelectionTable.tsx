@@ -1,11 +1,10 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import UpArrow2 from "../assets/UpArrow2-New.png";
 import DownArrow2 from "../assets/DownArrow2.png";
 import UpDownArrow from "../assets/UpDownArrow.png";
-import Filter from "../assets/Filter.png";
+import UploadKeystoreData from "./UploadKeystoreData";
 import "../css/OperatorSelectionTable.css";
 
 // Define the type for an operator
@@ -20,6 +19,7 @@ interface Operator {
 
 export default function OperatorSelectionTable() {
   const [operators, setOperators] = useState<Operator[]>([]);
+  const [showKeystoreUpload, setShowKeystoreUpload] = useState(false);
   const [selectedOperators, setSelectedOperators] = useState<Operator[]>([]);
   const [clusterSize, setClusterSize] = useState<number>(4);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -31,9 +31,7 @@ export default function OperatorSelectionTable() {
     direction: null,
   });
 
-  const router = useRouter();
-
-  const [totalFee, setTotalFee] = useState<number>(0); // State for total fee
+  const [totalFee, setTotalFee] = useState<number>(0);
 
   // Fetch data from the API
   useEffect(() => {
@@ -135,20 +133,44 @@ export default function OperatorSelectionTable() {
       return 0;
     });
 
+    const handleKeystoreUpload = () => {
+      setShowKeystoreUpload(true);
+    }
+
+    const goBackToOperatorSelection = () => {
+      setShowKeystoreUpload(false);
+    };
+  
+    if (showKeystoreUpload) {
+      return <UploadKeystoreData goBack={goBackToOperatorSelection} />;
+    }
+
   return (
-    <div className="operator-selection-container">
+    <div className="operator-selection-container z-10">
       <div className="table-container">
-        <h2>Pick the cluster of network operators to run your validator</h2>
-        <div className="cluster-size-selector">
-          {[4, 7, 10, 13].map((size) => (
-            <button
-              key={size}
-              className={clusterSize === size ? "active" : ""}
-              onClick={() => setClusterSize(size)}
-            >
-              {size}
-            </button>
-          ))}
+      <h1 className="text-2xl font-semibold">Select Operators</h1>
+        <div className="flex justify-between items-center">
+          <h2>Pick the cluster of network operators to run your validator</h2>
+          <div className="cluster-size-selector">
+            {[4, 7, 10, 13].map((size) => (
+              <button
+                key={size}
+                onClick={() => setClusterSize(size)}
+                style={{
+                  border: "1px solid transparent",
+                  borderImage: 
+                      "linear-gradient(to right, #A257EC 0% , #DA619C 60%)",
+                  borderImageSlice: 1,
+                  color: "white",
+                  background: 
+                      "linear-gradient(to right, #121212 0%, #252525 60%)",
+                }}
+                className={clusterSize === size ? "active" : ""}
+              >
+                <span className="text-white">{size}</span>
+              </button>
+            ))}
+          </div>
         </div>
         <div className="search-filter">
           <div className="search-container">
@@ -157,51 +179,93 @@ export default function OperatorSelectionTable() {
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              // style={{width: '60px'}}
             />
             <span className="search-icon">🔍</span>
           </div>
-          <button className="filter-button">
-            <span className="filter-icon">⚙️</span> Filters
-          </button>
+          {/* <button
+            className="filter-button"
+            style={{
+              border: "1px solid transparent",
+              borderImage: "linear-gradient(180deg, #FFA800 0%, #DA619C 100%",
+              borderImageSlice: 1,
+              background: "linear-gradient(180deg, #FFA800 0%, #DA619C 100%",
+              WebkitBackgroundClip: "text",
+            }}
+          >
+            <span className="filter-icon">
+              <Image src={Filter} alt="Ascending" width={20} height={20} />
+            </span>{" "}
+            Filters
+          </button> */}
         </div>
         <table>
           <thead>
-            <tr>
+            <tr className="border border-gray-500">
+              <th className=""></th>
               <th className="cursor-pointer" onClick={() => handleSort("id")}>
-                ID {renderSortIcon("id")}
+                <span className="flex items-center gap-2">
+                  ID {renderSortIcon("id")}
+                </span>
               </th>
               <th className="cursor-pointer" onClick={() => handleSort("name")}>
-                Name {renderSortIcon("name")}
+                <span className="flex items-center gap-2">
+                  Name {renderSortIcon("name")}
+                </span>
               </th>
               <th
                 className="cursor-pointer"
                 onClick={() => handleSort("validators")}
               >
-                Validators {renderSortIcon("validators")}
+                <span className="flex items-center gap-2">
+                  Validators {renderSortIcon("validators")}
+                </span>
               </th>
               <th
                 className="cursor-pointer"
                 onClick={() => handleSort("performance")}
               >
-                30d performance {renderSortIcon("performance")}
+                <span className="flex items-center gap-2">
+                  30d performance {renderSortIcon("performance")}
+                </span>
               </th>
               <th
                 className="cursor-pointer"
                 onClick={() => handleSort("yearlyFee")}
               >
-                Yearly Fee {renderSortIcon("yearlyFee")}
+                <span className="flex items-center gap-2">
+                  Yearly Fee {renderSortIcon("yearlyFee")}
+                </span>
               </th>
               <th className="cursor-pointer" onClick={() => handleSort("mev")}>
-                MEV {renderSortIcon("mev")}
+                <span className="flex items-center gap-2">
+                  MEV {renderSortIcon("mev")}
+                </span>
               </th>
             </tr>
           </thead>
+
           <tbody>
             {filteredAndSortedOperators.map((operator) => (
               <tr
                 key={operator.id}
-                onClick={() => handleRowSelection(operator)}
+                // onClick={() => handleRowSelection(operator)}
+                className="border border-gray-400 cursor-none"
               >
+                <td>
+                <input
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering row click
+                      handleRowSelection(operator); // Manually trigger the selection logic
+                    }}
+                    type="checkbox"
+                    className="mr-2 custom-checkbox"
+                    checked={selectedOperators.some(
+                      (op) => op.id === operator.id
+                    )}
+                    onChange={() => {}}
+                  />
+                </td>
                 <td>{operator.id}</td>
                 <td>{operator.name}</td>
                 <td>{operator.validators}</td>
@@ -212,6 +276,7 @@ export default function OperatorSelectionTable() {
             ))}
           </tbody>
         </table>
+        {/* linear-gradient(180deg, #FFA800 0%, #DA619C 100% */}
       </div>
 
       <div className="flex flex-col justify-between">
@@ -261,13 +326,57 @@ export default function OperatorSelectionTable() {
             </p>
           </div>
           <button
-            onClick={() => router.push("/next-page")} // Replace with your actual navigation logic
-            className="w-full bg-blue-600 text-white py-[6px] px-4 rounded-[6px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50"
+            onClick={handleKeystoreUpload}
+            style={{
+              border: "1px solid transparent",
+              borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
+              borderImageSlice: 1,
+              background: "linear-gradient(to right, #DA619C, #FF844A)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+            className="w-full text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold"
           >
             Next
           </button>
         </div>
       </div>
+      <style jsx>{`
+        .custom-checkbox {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          border-radius: 4px;
+          background: black;
+          border: 2px solid transparent;
+          background-image: linear-gradient(black, black),
+            linear-gradient(90deg, orange, purple);
+          background-origin: border-box;
+          background-clip: content-box, border-box;
+          position: relative;
+          transition: background 0.3s ease-in-out;
+          cursor: pointer;
+        }
+
+        .custom-checkbox:checked {
+          background-image: linear-gradient(black, black),
+            linear-gradient(90deg, orange, purple);
+          background-clip: content-box, border-box;
+        }
+
+        .custom-checkbox:checked::before {
+          content: "✔";
+          color: white;
+          position: absolute;
+          font-size: 16px;
+          line-height: 20px;
+          text-align: center;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+        }
+      `}</style>
     </div>
   );
 }
