@@ -8,7 +8,7 @@ import {
   sepolia,
   holesky,
 } from 'wagmi/chains';
-import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
+// import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 
 export const config = getDefaultConfig({
   appName: 'stake-easy',

@@ -7,24 +7,21 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 
 import { config } from "../../wagmi";
-
-const queryClient = new QueryClient();
-
 const myCustomTheme = {
   blurs: {
     modalOverlay: "blur(5px)",
   },
   colors: {
-    accentColor: "linear-gradient(90deg, #A257EC 4.35%, #D360A6 100%)",
+    accentColor: "#BA5CC9",
     accentColorForeground: "white",
     actionButtonBorder: "rgba(255, 255, 255, 0.15)",
     actionButtonBorderMobile: "rgba(255, 255, 255, 0.25)",
     actionButtonSecondaryBackground: "rgba(255, 255, 255, 0.25)",
     closeButton: "rgba(224, 232, 255, 0.8)",
-    closeButtonBackground: "rgba(255, 255, 255, 0.25)",
-    connectButtonBackground: "#644df6",
+    closeButtonBackground: "transaperent",
+    connectButtonBackground: "#BA5CC9",
     connectButtonBackgroundError: "#FF494A",
-    connectButtonInnerBackground: "#644df6",
+    connectButtonInnerBackground: "#BA5CC9",
     connectButtonText: "#FFF",
     connectButtonTextError: "#FFF",
     connectionIndicator: "#30E000",
@@ -37,24 +34,25 @@ const myCustomTheme = {
     generalBorderDim: "rgba(255, 255, 255, 0.15)",
     menuItemBackground: "rgba(224, 232, 255, 0.3)",
     modalBackdrop: "rgba(0, 0, 0, 0.7)",
-    modalBackground: "linear-gradient(112.07deg, #161515 26.66%, #252525 87.79%)",
+    modalBackground:
+      "linear-gradient(112.07deg, #161515 26.66%, #252525 87.79%)",
     modalBorder: "#DA619C",
     modalText: "#FFF",
     modalTextDim: "rgba(224, 232, 255, 0.5)",
     modalTextSecondary: "rgba(255, 255, 255, 0.8)",
     profileAction: "rgba(224, 232, 255, 0.3)",
     profileActionHover: "rgba(224, 232, 255, 0.4)",
-    profileForeground: "rgba(100, 77, 246, 0.2)",
+    profileForeground:
+      "linear-gradient(112.07deg, #161515 26.66%, #252525 87.79%)",
     selectedOptionBorder: "rgba(224, 232, 255, 0.3)",
     standby: "#FFD641",
-
   },
   fonts: {
     body: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol",
   },
   radii: {
     actionButton: "4px",
-    connectButton: "8px",
+    connectButton: "4px",
     menuButton: "4px",
     modal: "8px",
     modalMobile: "8px",
@@ -69,11 +67,15 @@ const myCustomTheme = {
   },
 };
 
+const queryClient = new QueryClient();
+
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-      <RainbowKitProvider theme={myCustomTheme}>{children}</RainbowKitProvider>
+        <RainbowKitProvider theme={myCustomTheme}>
+          {children}
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
