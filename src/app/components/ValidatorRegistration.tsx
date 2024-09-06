@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Info, X } from "lucide-react";
+import {
+  Copy,
+  CheckCircle,
+  X,
+  Info,
+  MessageCircleQuestionIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import OperatorSelectionTable from "./OperatorSelectionTable";
 
@@ -7,10 +13,10 @@ function ValidatorRegistration() {
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
-    const hasSeenPopup = localStorage.getItem("hasSeenValidatorPopup");
+    const hasSeenPopup = localStorage.getItem("hasSeenRegisrationPopup");
     if (!hasSeenPopup) {
       setShowPopup(true);
-      localStorage.setItem("hasSeenValidatorPopup", "true");
+      localStorage.setItem("hasSeenRegisrationPopup", "true");
     }
   }, []);
 
@@ -24,7 +30,7 @@ function ValidatorRegistration() {
 
   return (
     <div
-      className="relative mx-auto transition-all duration-300 w-[80%]"
+      className="relative mx-auto transition-all duration-300 w-[85%]"
       style={{
         background: "linear-gradient(to right, #1D1D1D 0%, #191919 100%)",
         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
@@ -32,57 +38,99 @@ function ValidatorRegistration() {
         borderRadius: "20px",
       }}
     >
-      <OperatorSelectionTable />
-
-      {/* Popup */}
       <AnimatePresence>
         {showPopup && (
           <motion.div
-            className="absolute inset-0 flex justify-center items-center z-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
           >
             <motion.div
-              className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg relative"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              style={{
+                border: "1px solid transparent",
+                borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+                borderImageSlice: 1,
+                color: "white",
+                textAlign: "center",
+                background: "linear-gradient(to right, #121212, #252525)",
+                boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
+                padding: "4rem 3rem",
+              }}
+              className=" rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
             >
+              <div className="flex justify-between items-center mb-4 ">
+                <div
+                  className="inline-block 3 py-1  text-sm mb-3"
+                  style={{
+                    borderRadius: "8px",
+                    fontSize: "1.7rem",
+                    textAlign: "justify",
+                  }}
+                >
+                  Select Operators
+                </div>
+
+                <button
+                  onClick={closePopup}
+                  style={{
+                    padding: "5px",
+                  }}
+                  className="absolute top-2 right-2 text-[#FC8150] "
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div style={{ textAlign: "justify", paddingBottom: "10px" }}>
+                Here, you will select operators to run your validator on the SSV
+                network. The 3m+1 criteria will ensure that your validator
+                remains operational even if one operator fails. For example, if
+                you select four operators, at least three of them must sign
+                transactions.
+              </div>
+              <div style={{ textAlign: "justify" }}>
+                You can choose from a variety of operators, view detailed
+                statistics about their performance and reliability, and make an
+                informed decision. Additionally, you will manage the fees
+                associated with each operator, ensuring that your validator is
+                set up with the right balance of cost and redundancy
+              </div>
+              <div style={{ textAlign: "justify" }}>
+                Then you will have to enter a keystore password that you have
+                generated before in the second step with the keystore file under
+                Enter Validator Key step
+              </div>
+              <div style={{ textAlign: "justify" }}>
+                You will also configure the duration for which your selected
+                operators will run. You can choose from predefined time periods
+                or enter a custom duration that suits your needs. The fees for
+                running your operators will vary based on the selected time
+                period. Once you have made your selection, a comprehensive
+                summary of the total fees will be displayed, showing the amount
+                you need to pay to register your validator on the Stake Easy
+                network
+              </div>
               <button
                 onClick={closePopup}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                style={{
+                  background: "linear-gradient(to right, #A257EC, #D360A6)",
+                  textAlign: "center",
+                  color: "white",
+                  marginTop: "30px",
+                }}
+                className=" text-white py-2 px-4 rounded-md shadow-lg text-center"
               >
-                <X className="w-5 h-5" />
-              </button>
-              <h3 className="text-2xl font-semibold text-gray-800 mb-4">
-                Welcome to Validator Registration
-              </h3>
-              <p className="text-gray-600 mb-4">
-                This section allows you to select operators for validator
-                registration.
-              </p>
-              <button
-                onClick={closePopup}
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
-              >
-                Got it!
+                Got it
               </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Button to Reopen Popup */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={openPopup}
-          className="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-lg"
-        >
-          <Info className="w-5 h-5 mr-2" />
-          Show Welcome Message
-        </button>
-      </div>
+      <OperatorSelectionTable />
     </div>
   );
 }
