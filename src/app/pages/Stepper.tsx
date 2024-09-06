@@ -72,7 +72,7 @@ function Stepper() {
                 className={`step flex flex-col items-center relative w-full`}
               >
                 <motion.div
-                  className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center text-white font-bold ${
+                  className={`w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center text-white font-bold ${
                     index <= currentStep
                       ? "bg-gradient-to-b from-[#FC8151] to-[#C951C0]"
                       : "bg-[#585858]"

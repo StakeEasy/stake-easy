@@ -3,7 +3,7 @@ import Stepper from "@/app/pages/Stepper";
 import Footer from "./components/Footer";
 import OperatorSelectionTable from "./components/OperatorSelectionTable";
 import Image from "next/image";
-// import UserFlow from "./components/UserFlow";
+import Landing from "./components/Landing";
 import React from 'react';
 
 export default function Home() {
@@ -12,6 +12,7 @@ export default function Home() {
       <Navbar />
       {/* <OperatorSelectionTable /> */}
       <Stepper />
+      {/* <Landing /> */}
       <Footer />
       {/* <UserFlow /> */}
     </div>

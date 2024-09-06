@@ -1,5 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import UpArrow2 from "../assets/UpArrow2-New.png";
+import DownArrow2 from "../assets/DownArrow2.png";
+import UpDownArrow from "../assets/UpDownArrow.png";
+import Filter from "../assets/Filter.png";
 import "../css/OperatorSelectionTable.css";
 
 // Define the type for an operator
@@ -25,6 +31,10 @@ export default function OperatorSelectionTable() {
     direction: null,
   });
 
+  const router = useRouter();
+
+  const [totalFee, setTotalFee] = useState<number>(0); // State for total fee
+
   // Fetch data from the API
   useEffect(() => {
     const fetchOperators = async () => {
@@ -39,17 +49,21 @@ export default function OperatorSelectionTable() {
         );
         const data = await response.json();
         
-        // Extract operators array from the response
-        const transformedOperators = data.operators.map((op: any) => ({
-          id: op.id,
-          name: op.name,
-          validators: 0, // Assuming validators are not provided, set to 0
-          performance: `${op.performance['30d'].toFixed(2)}%`, // Assuming '30d' performance is required
-          yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`, // Convert fee to SSV and format
-          mev: 0, // Assuming MEV is not provided, set to 0
-        }));
-        
-        setOperators(transformedOperators);
+        // Ensure the response contains the operators array
+        if (data.operators && Array.isArray(data.operators)) {
+          const transformedOperators = data.operators.map((op: any) => ({
+            id: op.id,
+            name: op.name,
+            validators: 0, // Assuming validators are not provided, set to 0
+            performance: `${op.performance['30d'].toFixed(2)}%`, // Assuming '30d' performance is required
+            yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`, // Convert fee to SSV and format
+            mev: 0, // Assuming MEV is not provided, set to 0
+          }));
+          
+          setOperators(transformedOperators);
+        } else {
+          console.error("Invalid response structure:", data);
+        }
       } catch (error) {
         console.error("Failed to fetch operators:", error);
       }
@@ -58,14 +72,28 @@ export default function OperatorSelectionTable() {
     fetchOperators();
   }, []); // Empty dependency array ensures this runs once on mount
 
+  // Function to calculate the total fee
+  const calculateTotalFee = (selectedOps: Operator[]) => {
+    const total = selectedOps.reduce(
+      (sum, op) => sum + parseInt(op.yearlyFee.split(" ")[0]),
+      0
+    );
+    setTotalFee(total);
+  };
+
   const handleRowSelection = (operator: Operator) => {
     setSelectedOperators((prev) => {
+      let updatedOperators;
       if (prev.find((op) => op.id === operator.id)) {
-        return prev.filter((op) => op.id !== operator.id);
+        updatedOperators = prev.filter((op) => op.id !== operator.id);
       } else if (prev.length < clusterSize) {
-        return [...prev, operator];
+        updatedOperators = [...prev, operator];
+      } else {
+        updatedOperators = prev;
       }
-      return prev;
+
+      calculateTotalFee(updatedOperators); // Calculate fee whenever selection changes
+      return updatedOperators;
     });
   };
 
@@ -80,9 +108,13 @@ export default function OperatorSelectionTable() {
 
   const renderSortIcon = (key: keyof Operator) => {
     if (sortConfig.key === key) {
-      return sortConfig.direction === "ascending" ? "🔼" : "🔽";
+      return sortConfig.direction === "ascending" ? (
+        <Image src={DownArrow2} alt="Descending" width={20} height={20} />
+      ) : (
+        <Image src={UpArrow2} alt="Ascending" width={20} height={20} />
+      );
     }
-    return "🔼"; // Default unsorted state
+    return <Image src={UpDownArrow} alt="Default" width={20} height={20} />; // Default unsorted state
   };
 
   // Apply search filter and sorting
@@ -181,23 +213,60 @@ export default function OperatorSelectionTable() {
           </tbody>
         </table>
       </div>
-      <div className="selected-operators">
-        <h3>
-          Selected Operators {selectedOperators.length}/{clusterSize}
-        </h3>
-        {selectedOperators.map((operator, index) => (
-          <div key={operator.id} className="selected-operator">
-            {operator.name} (Operator {String(index + 1).padStart(2, "0")})
+
+      <div className="flex flex-col justify-between">
+        <div className="selected-operators">
+          <div className="mb-[6px] flex justify-between items-center">
+            <div className="text-lg">Selected Operators</div>
+            <div className="text-xl">
+              {selectedOperators.length}/
+              <span className="text-orange-400">{clusterSize}</span>
+            </div>
           </div>
-        ))}
-        {Array(clusterSize - selectedOperators.length)
-          .fill(null)
-          .map((_, index) => (
-            <div key={index} className="empty-operator">
-              Select Operator{" "}
-              {String(selectedOperators.length + index + 1).padStart(2, "0")}
+
+          {selectedOperators.map((operator, index) => (
+            <div
+              key={operator.id}
+              className="relative p-[1px] rounded-lg bg-gradient-to-b from-[#A257EC] to-[#DA619C] mb-2"
+            >
+              <div className="flex items-center justify-center h-full w-full bg-[#161515] rounded-lg text-white py-3">
+                {operator.name} (Operator {String(index + 1).padStart(2, "0")})
+              </div>
             </div>
           ))}
+
+          {Array(clusterSize - selectedOperators.length)
+            .fill(null)
+            .map((_, index) => (
+              <div
+                key={index}
+                className="relative p-[1px] rounded-lg bg-gradient-to-b from-[#A257EC] to-[#DA619C] mb-2"
+              >
+                <div className="flex items-center justify-center h-full w-full bg-[#161515] rounded-lg text-white py-3">
+                  Select Operator{" "}
+                  {String(selectedOperators.length + index + 1).padStart(
+                    2,
+                    "0"
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
+        {/* Display the total fee */}
+        <div className="total-fee">
+          <div className="flex justify-between items-center mt-2 mb-1">
+            <h4>Operators Yearly Fee:</h4>
+            <p>
+              <span className="text-orange-400">{totalFee}</span> SSV
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/next-page")} // Replace with your actual navigation logic
+            className="w-full bg-blue-600 text-white py-[6px] px-4 rounded-[6px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
   display: flex;
   gap: 1rem;
   padding: 1rem;
-  background-color: #1a202c;
+  border-radius: 10px;
   color: white;
   font-family: Arial, sans-serif;
 }
@@ -79,7 +79,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #4a5568;
@@ -94,10 +95,14 @@ tbody tr:hover {
   width: 16rem;
 }
 
-.selected-operator, .empty-operator {
+.selected-operator,
+.empty-operator {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   background-color: #2d3748;
+  border-width: 2px;
+  border-style: solid;
+  border-color: linear-gradient(180deg, #A257EC 0%, #DA619C 100%);
   border-radius: 0.25rem;
 }
 
