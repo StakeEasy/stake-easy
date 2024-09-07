@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAccount } from 'wagmi';
 import { Contract, ethers } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import { CheckCircle, CloudUpload, X, Info } from "lucide-react";
+import { CheckCircle, CloudUpload, X, MessageCircleQuestionIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast, Toaster } from "react-hot-toast";
 import depositContractABI from "../utils/depositABI.json";
 import { prefix0X, TransactionStatus } from "../utils/helpers";
-
-const DEPOSIT_CONTRACT_ADDRESS = '0x4242424242424242424242424242424242424242';
-const PRICE_PER_VALIDATOR = 32;
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;
@@ -21,6 +19,7 @@ function UploadDepositData() {
   const [showPopup, setShowPopup] = useState(false);
   const [depositData, setDepositData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const [isDepositLoading, setIsDepositLoading] = useState(false);
   const [isDepositSuccess, setIsDepositSuccess] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -30,7 +29,7 @@ function UploadDepositData() {
   const signer = provider.getSigner();
 
   const contract = new Contract(
-    DEPOSIT_CONTRACT_ADDRESS,
+    process.env.DEPOSIT_CONTRACT_ADDRESS as string,
     depositContractABI,
     signer
   );
@@ -51,12 +50,14 @@ function UploadDepositData() {
 
     if (depositData.pubkey === null || depositData.withdrawal_credentials === null || depositData.signature === null || depositData.deposit_data_root === null) {
       setError("Invalid JSON file. Please upload a valid deposit data file.");
+      toast.error("Invalid JSON file. Please upload a valid deposit data file.");
       setIsDepositLoading(false);
       return;
     }
 
     if (chain?.id !== 17000) {
       setError("Please connect to the Holesky testnet to continue.");
+      toast.error("Please connect to the Holesky testnet to continue.");
       setIsDepositLoading(false);
       return;
     }
@@ -78,7 +79,7 @@ function UploadDepositData() {
         deposit_data_root,
         {
           gasPrice: gasPrice,
-          value: parseEther((PRICE_PER_VALIDATOR).toString()),
+          value: parseEther((process.env.PRICE_PER_VALIDATOR as string).toString()),
         }
       );
 
@@ -88,13 +89,14 @@ function UploadDepositData() {
       const receipt = await tx.wait();
       if (receipt.status) {
         setIsDepositSuccess(true);
+        toast.success("Deposit transaction successful!");
         updateTransactionStatus(depositData.pubkey, TransactionStatus.SUCCEEDED, tx.hash);
       } else {
         updateTransactionStatus(depositData.pubkey, TransactionStatus.FAILED, tx.hash);
       }
     } catch (error) {
-      console.error("Error initiating deposit transaction:", error);
       setError("Failed to initiate deposit transaction. Please try again.");
+      toast.error("Failed to initiate deposit transaction. Please try again.");
       setIsDepositLoading(false);
       setIsDepositSuccess(false);
     } 
@@ -121,8 +123,8 @@ function UploadDepositData() {
           const jsonContent = JSON.parse(event.target?.result as string);
           setDepositData(jsonContent);
         } catch (error) {
-          console.error("Error parsing JSON file:", error);
           setError("Invalid JSON file. Please upload a valid deposit data file.");
+          toast.error("Invalid JSON file. Please upload a valid deposit data file.");
         }
       };
       reader.readAsText(file);
@@ -137,7 +139,28 @@ function UploadDepositData() {
     setShowPopup(true);
   };
 
-  return (  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
+        closePopup();
+      }
+    };
+
+    if (showPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showPopup]);
+
+  return (
     <div
       className="relative mx-auto transition-all duration-300 w-[70%]"
       style={{
@@ -156,6 +179,7 @@ function UploadDepositData() {
             className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
           >
             <motion.div
+              ref={popupRef}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -167,32 +191,35 @@ function UploadDepositData() {
                 textAlign: "center",
                 background: "linear-gradient(to right, #121212, #252525)",
                 boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
-                padding: "4rem 3rem",
+                padding: "3rem 2rem",
               }}
               className=" rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
             >
               <div className="flex justify-between items-center mb-4 ">
-                <div
-                  className="inline-block 3 py-1  text-sm mb-3"
+                <h1
+                  className=" py-1  text-sm "
                   style={{
                     borderRadius: "8px",
                     fontSize: "1.7rem",
                     textAlign: "justify",
+                    lineHeight: "3rem",
+                    background: "linear-gradient(to right, #DA619C, #FF844A)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   Upload Deposit Data
-                </div>
-
-                <button
-                  onClick={closePopup}
-                  style={{
-                    padding: "5px",
-                  }}
-                  className="absolute top-2 right-2 text-[#FC8150] "
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                </h1>
               </div>
+              <button
+                onClick={closePopup}
+                style={{
+                  padding: "5px",
+                }}
+                className="absolute top-2 right-2 text-[#FC8150] "
+              >
+                <X className="w-5 h-5" />
+              </button>
 
               <div style={{ textAlign: "justify", paddingBottom: "10px" }}>
                 Here, you have to upload the deposit file and confirm the
@@ -206,7 +233,7 @@ function UploadDepositData() {
                   background: "linear-gradient(to right, #A257EC, #D360A6)",
                   textAlign: "center",
                   color: "white",
-                  marginTop: "30px",
+                  marginTop: "10px",
                 }}
                 className=" text-white py-2 px-4 rounded-md shadow-lg text-center"
               >
@@ -216,44 +243,49 @@ function UploadDepositData() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="relative text-white rounded-xl shadow-sm p-4 mx-auto">
+      <div className="relative text-white rounded-xl  p-4 mx-auto">
         <div
           className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ${
             showPopup ? "blur-sm" : ""
           }`}
         >
-          <div className="flex flex-col justify-center">
-            <h2
-              className="text-2xl font-bold mb-3"
-              style={{
-                background: "linear-gradient(to right, #DA619C, #FF844A)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Upload Deposit Data
-            </h2>
-
-            <p className="text-white text-md">
-              Learn how to seamlessly upload deposit data, ensuring your
-              validator registration is complete and processed on the stake-easy
-              network
-            </p>
-          </div>
-          <div className="space-y-6">
+          <div className="flex flex-col justify-between">
             <div>
-              <div className="flex flex-col items-center justify-center bg-[#161515] rounded-md overflow-hidden p-6 transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-500">
+              <h2 className="text-2xl font-bold mb-3">Upload Deposit Data</h2>
+
+              <p className="text-white text-md">
+                Upload deposit file which you had generated in step 2 <br />(
+                Via CLI )
+              </p>
+            </div>
+
+            <button
+              onClick={openPopup}
+              className="text-[#FC8150] flex items-center space-x-2 text-sm mt-3"
+            >
+              <MessageCircleQuestionIcon className="w-4 h-4" />
+              <span>Learn more about Deposit Data</span>
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex flex-col gap-6">
+              <div
+                style={{
+                  boxShadow: " rgb(43 43 43) 0px 4px 6px",
+                }}
+                className="flex flex-col items-center justify-center  rounded-md overflow-hidden p-6 transition-all duration-300 focus-within:ring-1 focus-within:ring-blue-500"
+              >
                 <label
                   htmlFor="file-upload"
                   className="cursor-pointer flex flex-col items-center"
                 >
                   {file ? (
-                    <CheckCircle className="h-12 w-12 text-gray-500 mb-4" />
+                    <CheckCircle className="h-16 w-16 p-4 bg-gradient-to-b from-[#FC8151] to-[#C951C0] text-white rounded-full" />
                   ) : (
                     <CloudUpload className="h-16 w-16 mb-4 p-4 bg-gradient-to-b from-[#FC8151] to-[#C951C0] text-white rounded-full" />
                   )}
-                  <p className="text-white mb-2">
+                  <p className="text-white mt-2">
                     {file ? file.name : "Drag file to upload or browse"}
                   </p>
                 </label>
@@ -265,33 +297,45 @@ function UploadDepositData() {
                   id="file-upload"
                 />
               </div>
-            </div>
-            <button
-              onClick={startDepositTransaction}
-              disabled={!file || !isConnected || isDepositLoading}
-              style={{
-                border: "1px solid transparent",
-                borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
-                borderImageSlice: 1,
-                background: "linear-gradient(to right, #DA619C, #FF844A)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-              className=" grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold"
-            >
-              {isDepositLoading ? 'Staking...' : 'Stake ETH'}
+              <button
+                onClick={startDepositTransaction}
+                disabled={!file || !isConnected || isDepositLoading}
+                style={{
+                  border: "1px solid transparent",
+                  borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
+                  borderImageSlice: 1,
+                  background: "linear-gradient(to right, #DA619C, #FF844A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+                className={`mx-auto w-[40%] grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold ${
+                  isDepositLoading || !isConnected
+                    ? "opacity-75 cursor-not-allowed"
+                    : ""
+                }`}
+              >
+                {isDepositLoading ? 'Staking...' : 'Stake'}
             </button>
             {isDepositSuccess && (
-              <p className="text-green-500">Stake successful! Transaction hash: {txHash}</p>
-            )}
-            {error && (
-              <p className="text-red-500">{error}</p>
-            )}
+              toast.success("Stake successful! Transaction hash: " + txHash))
+            }
+            </div>
           </div>
+        </div>
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
-  </div>
   );
-} 
+}
 
 export default UploadDepositData;

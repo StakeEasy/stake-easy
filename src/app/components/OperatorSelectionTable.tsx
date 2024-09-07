@@ -1,30 +1,28 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import UpArrow2 from "../assets/UpArrow2-New.png";
 import DownArrow2 from "../assets/DownArrow2.png";
 import UpDownArrow from "../assets/UpDownArrow.png";
-import UploadKeystoreData from "./UploadKeystoreData";
+import Filter from "../assets/Filter.png";
 import "../css/OperatorSelectionTable.css";
+import KeyStoreFile from "./KeyStoreFile";
+import Image from "next/image";
 import icon from "../assets/icon.png";
-import { Url } from "next/dist/shared/lib/router/router";
 
 // Define the type for an operator
 interface Operator {
   id: number;
-  address: string;
   name: string;
   validators: number;
   performance: string;
   yearlyFee: string;
   mev: number;
-  image: string;
 }
 
 export default function OperatorSelectionTable() {
   const [operators, setOperators] = useState<Operator[]>([]);
-  const [showKeystoreUpload, setShowKeystoreUpload] = useState(false);
   const [selectedOperators, setSelectedOperators] = useState<Operator[]>([]);
+  const [showKeystoreUpload, setShowKeystoreUpload] = useState(false);
   const [clusterSize, setClusterSize] = useState<number>(4);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<{
@@ -34,10 +32,21 @@ export default function OperatorSelectionTable() {
     key: "id",
     direction: null,
   });
+  const [parsedPayload, setParsedPayload] = useState<{
+    publicKey: string;
+    operatorIds: number[];
+    sharesData: string;
+    totalFee: number;
+  }>({
+    publicKey: "",
+    operatorIds: [],
+    sharesData: "",
+    totalFee: 0,
+  });
 
   const [loading, setLoading] = useState(true);
 
-  const [totalFee, setTotalFee] = useState<number>(0); // State for total fee
+  const [totalFee, setTotalFee] = useState<number>(0);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,20 +71,17 @@ export default function OperatorSelectionTable() {
           }
         );
         const data = await response.json();
-        
-        // Ensure the response contains the operators array
+
         if (data.operators && Array.isArray(data.operators)) {
           const transformedOperators = data.operators.map((op: any) => ({
             id: op.id,
-            address: op.public_key,
             name: op.name,
-            validators: op.validators_count,
+            validators: 0,
             performance: `${op.performance["30d"].toFixed(2)}%`,
             yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`,
             mev: 0,
-            image: op.logo
           }));
-          
+
           setOperators(transformedOperators);
         } else {
           console.error("Invalid response structure:", data);
@@ -89,17 +95,24 @@ export default function OperatorSelectionTable() {
 
     fetchOperators();
   }, []);
-  
-  console.log(selectedOperators);
-  // Empty dependency array ensures this runs once on mount
 
-  // Function to calculate the total fee
   const calculateTotalFee = (selectedOps: Operator[]) => {
     const total = selectedOps.reduce(
       (sum, op) => sum + parseInt(op.yearlyFee.split(" ")[0]),
       0
     );
+    const opertorIds = selectedOps.map((op) => op.id);
+
     setTotalFee(total);
+  
+    const paersedPayload = {
+      publicKey: "",
+      operatorIds: opertorIds,
+      sharesData: "",
+      totalFee: total,
+    };
+
+    setParsedPayload(paersedPayload);
   };
 
   const handleRowSelection = (operator: Operator) => {
@@ -188,7 +201,7 @@ export default function OperatorSelectionTable() {
   };
 
   if (showKeystoreUpload) {
-    return <UploadKeystoreData goBack={goBackToOperatorSelection} operatorsData={selectedOperators}/>;
+    return <KeyStoreFile goBack={goBackToOperatorSelection} paersedPayload={parsedPayload} />;
   }
 
   return (
@@ -352,9 +365,9 @@ export default function OperatorSelectionTable() {
                           }}
                         >
                           <Image
-                            src={operator.image}
+                            src={icon}
                             alt=""
-                            style={{ 
+                            style={{
                               borderRadius: "20px",
                               padding: "3px",
                               border: "1px solid #A6A6A6",

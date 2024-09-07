@@ -2,10 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation"
 import OperatorCard from "./OperatorCard";
-import Footer from "@/app/components/Footer";
-import Navbar from "@/app/components/Navbar";
 import { Copy, Info, CheckCircle, ArrowLeft } from "lucide-react";
-import icon from "../assets/icon.png";
 import Image from "next/image";
 import { Tooltip, Carousel } from "antd";
 

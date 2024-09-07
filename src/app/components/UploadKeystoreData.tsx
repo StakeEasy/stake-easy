@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { CheckCircle, Eye, EyeOff, CloudUpload, X, Info, ArrowLeft } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
+import { CheckCircle, Eye, EyeOff, CloudUpload, ArrowLeft } from "lucide-react";
 import SelectTime from "./SelectTime";
 
 enum STEPS {
@@ -13,10 +12,10 @@ enum STEPS {
 
 interface UploadKeystoreDataProps {
   goBack: () => void; 
-  operatorsData: any;
+  parsedPayload: any;
 }
 
-function UploadKeystoreData({ goBack,operatorsData }: UploadKeystoreDataProps) {
+function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -24,13 +23,10 @@ function UploadKeystoreData({ goBack,operatorsData }: UploadKeystoreDataProps) {
 
   const [step, setStep] = useState<STEPS>(STEPS.START);
   const [keySharesData, setKeyShares] = useState<string>('');
-  const [finalPayload, setFinalPayload] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
-  const [parsedPayload, setParsedPayload] = useState<any>({});
+  const [newParsedPayload, setNewParsedPayload] = useState<any>({});
+  const [finalPayload, setFinalPayload] = useState<string>('');
 
-
-
-  // console.log("operatorsData",operatorsData);
   const handleSelectTime  = async () => {
     setStep(STEPS.DECRYPT_KEYSTORE);
 

@@ -16,11 +16,6 @@ interface TransactionProps {
 const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
   const [copied, setCopied] = useState(false);
 
-  const { address, isConnected, chain } = useAccount();
-  // const provider = new ethers.providers.Web3Provider(window.ethereum);
-  // const signer = provider.getSigner();
-  // console.log("signerrrrrrrrrrrrrrrrrrr",signer);
-
   const copyToClipboard = () => {
     // navigator.clipboard.writeText(address);
     setCopied(true);
@@ -29,29 +24,14 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
 
   const handleContractInteraction = async (parsedPayload: any) => {
     try {
-      // Check if MetaMask is installed
-      if (typeof window.ethereum !== 'undefined') {
-        // Request account access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Create a Web3Provider instance
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        
-        // Get the signer
-        const signer = provider.getSigner();
-        
-        // Contract address
         const contractAddress = "0x5Dbf9a62BbcC8135AF60912A8B0212a73e4a6629";
-        
-        // Create a contract instance
-        const contract = new ethers.Contract(contractAddress, contractABI, signer);
-        
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);  
+      
         const { publicKey, operatorIds, sharesData } = parsedPayload;
-        
-        const amount = ethers.utils.parseEther("1.5"); // Convert 1.5 SSV to Wei
+      
+        const amount = 
         const cluster = [0, 0, 0, true, 0];
         
-        // Execute contract function
         const transaction = await contract.registerValidator(publicKey, operatorIds, sharesData, amount, cluster);
         const receipt = await transaction.wait();
         

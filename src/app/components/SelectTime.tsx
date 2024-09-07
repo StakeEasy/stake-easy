@@ -7,15 +7,14 @@ import { Info } from "lucide-react";
 
 interface SelectTimeProps {
   goBack: () => void;
-  parsedPayload: any; // Add this line to include the new prop
+  totalOperatorFees: number;
+  parsedPayload: any;
 }
 
-const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
+const StakingInterface = ({ goBack, totalOperatorFees, parsedPayload }: SelectTimeProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [customPeriod, setCustomPeriod] = useState<number | string>(0);
   const [showTxDetails, setShowTxDetails] = useState(false);
-
-  console.log("parsedPayload: ", parsedPayload);
 
   const handleCustomPeriodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -54,10 +53,8 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
 
   const handleRowClick = (period: string) => {
     if (selectedPeriod === period) {
-      // Unselect if the same period is clicked
       setSelectedPeriod("");
     } else {
-      // Select the clicked period
       setSelectedPeriod(period);
     }
   };
@@ -68,7 +65,14 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
         <ArrowLeft className="w-5 h-5 mr-2" />
         Back
       </button>
-      <h2 className="text-2xl font-bold mb-4">
+      <h2
+        className="text-2xl font-bold mb-4"
+        style={{
+          background: "linear-gradient(to right, #DA619C, #FF844A)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+        }}
+      >
         Select your validator funding period
       </h2>
       <p className="mb-4">
@@ -163,7 +167,7 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
               <Info size={10} className="ml-1" />
             </Tooltip>
           </span>
-          <span>6 SSV</span>
+          <span>{totalOperatorFees}</span>
         </div>
         <div className="flex justify-between">
           <span className="flex items-center ">
@@ -205,8 +209,8 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
         <div className="flex justify-between font-bold">
           <span>Total</span>
           <span className="">
-            {/* here 7 is sum amount of static Liquidation collateral and static operator fee */}
-            {7 +
+            {totalOperatorFees +
+              1 +
               (selectedPeriod === "Custom Period"
                 ? Number(((Number(customPeriod) / 365) * 1).toFixed(5))
                 : selectedPeriod === "6 Months"
@@ -220,7 +224,6 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
       </div>
 
       <button
-        // className="mt-6 w-full bg-blue-500 text-white py-2 rounded"
         onClick={handleTxDeatils}
         style={{
           border: "1px solid transparent",
