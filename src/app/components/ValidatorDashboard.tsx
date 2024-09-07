@@ -301,7 +301,7 @@ const ValidatorDashboard = () => {
                     background: "linear-gradient(to right, #1d1d1d, #0f0f0f)",
                   }}
                 >
-                  <div className="flex justify-between items-center  p-4">
+                  <div className="flex justify-between items-center p-4">
                     <p className="text-sm">Public Key</p>
                     <div className="text-xs flex items-center">
                       <span className="mr-1 text-sm font-semibold">Status</span>

@@ -7,6 +7,66 @@
   font-family: Arial, sans-serif;
 }
 
+/* For the operator table */
+.operator-table {
+  max-height: 400px; /* Adjust the height as per your design */
+  overflow-y: auto;
+}
+
+/* For the selected operators section */
+.selected-operators {
+  max-height: 400px; /* Adjust the height as per your design */
+  overflow-y: auto;
+}
+
+.scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Scrollbar Styles for the Operator Table */
+.operator-table::-webkit-scrollbar {
+  width: 3px;
+}
+
+.operator-table::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 10px;
+}
+
+.operator-table::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 10px;
+}
+
+/* Scrollbar Styles for the Selected Operators Section */
+.selected-operators::-webkit-scrollbar {
+  width: 3px;
+}
+
+.selected-operators::-webkit-scrollbar-track {
+  background: var(--sb-track-color);
+  border-radius: 10px;
+}
+
+.selected-operators::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb-color);
+  border-radius: 10px;
+}
+
+.selected-operators {
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  padding-right: 16px; /* Add padding to prevent clipping at the right edge */
+  box-sizing: border-box; /* Ensure padding is included in the element's width */
+}
+
+/* Prevent Horizontal Scrollbars */
+.operator-table,
+.selected-operators {
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
 .table-container {
   flex-grow: 1;
 }
@@ -48,8 +108,8 @@ h2 {
 .search-container input {
   width: 100%;
   padding: 0.5rem 1rem 0.5rem 2.5rem;
-  background-color: #2d3748;
-  border: none;
+  background-color: #171717;
+  border: 1px solid gray;
   color: white;
 }
 
@@ -102,7 +162,7 @@ tbody tr:hover {
   background-color: #2d3748;
   border-width: 2px;
   border-style: solid;
-  border-color: linear-gradient(180deg, #A257EC 0%, #DA619C 100%);
+  border-color: linear-gradient(180deg, #a257ec 0%, #da619c 100%);
   border-radius: 0.25rem;
 }
 

@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Copy, CheckCircle, ArrowLeft, ChevronRight } from "lucide-react";
+import { toast, Toaster } from "react-hot-toast";
+import {
+  X,
+  Copy,
+  CheckCircle,
+  ArrowLeft,
+  ChevronRight,
+  MessageCircleQuestionIcon,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function KeyGeneration() {
@@ -9,7 +17,6 @@ function KeyGeneration() {
   const [showTerminalSteps, setShowTerminalSteps] = useState(false);
   const [showGUISteps, setShowGUISteps] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-
 
   useEffect(() => {
     // Check if the user has already seen the main popup
@@ -33,6 +40,11 @@ function KeyGeneration() {
     setShowPopup(true);
     setShowPopupBlur(false);
   };
+  const openPopupBlur = (type: any) => {
+    setPopupType(type);
+    setShowPopup(false);
+    setShowPopupBlur(true);
+  };
 
   const acceptTerms = () => {
     setShowPopup(false);
@@ -55,17 +67,21 @@ function KeyGeneration() {
   const handleCopy = async (text: any) => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
+    toast("Copied 🎊🎉");
     setTimeout(() => setCopied(false), 2000);
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
         closePopup();
       }
     };
 
-    if (showPopup) {
+    if (showPopupBlur || showPopup) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -74,7 +90,7 @@ function KeyGeneration() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showPopup]);
+  }, [showPopupBlur, showPopup]);
 
   return (
     <div
@@ -95,6 +111,7 @@ function KeyGeneration() {
             className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
           >
             <motion.div
+              ref={popupRef}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -106,31 +123,36 @@ function KeyGeneration() {
                 textAlign: "center",
                 background: "linear-gradient(to right, #121212, #252525)",
                 boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
-                padding: "4rem 3rem",
+                padding: "3rem 2rem",
               }}
               className=" rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto relative"
             >
               <div className="flex justify-between items-center mb-4 ">
-                <div
-                  className="inline-block 3 py-1 text-lg mb-3"
+                <h1
+                  className=" py-1  text-sm "
                   style={{
                     borderRadius: "8px",
+                    fontSize: "1.7rem",
                     textAlign: "justify",
+                    lineHeight: "3rem",
+                    background: "linear-gradient(to right, #DA619C, #FF844A)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   Generate Keys
-                </div>
-
-                <button
-                  onClick={closePopup}
-                  style={{
-                    padding: "5px",
-                  }}
-                  className="absolute top-2 right-2 text-[#FC8150] "
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                </h1>
               </div>
+
+              <button
+                onClick={closePopup}
+                style={{
+                  padding: "5px",
+                }}
+                className="absolute top-2 right-2 text-[#FC8150] "
+              >
+                <X className="w-5 h-5" />
+              </button>
 
               <div style={{ textAlign: "justify", paddingBottom: "10px" }}>
                 Here, you will generate your validator key using the Eigenpod
@@ -169,7 +191,7 @@ function KeyGeneration() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-            ref={popupRef}
+              ref={popupRef}
               style={{
                 border: "1px solid transparent",
                 borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
@@ -178,9 +200,9 @@ function KeyGeneration() {
                 color: "white",
                 background: "linear-gradient(to right, #121212, #252525)",
                 boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
-                padding: "4rem 3rem",
+                padding: "3rem 2rem",
               }}
-              className=" p-6 rounded-lg shadow-xl w-full relative "
+              className=" p-6 rounded-lg shadow-xl w-[70%] relative "
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
@@ -201,50 +223,91 @@ function KeyGeneration() {
                     <h3
                       className="font-semibold text-white mb-4"
                       style={{
-                        letterSpacing: "1px",
-                        lineHeight: "auto",
+                        borderRadius: "8px",
                         fontSize: "1.7rem",
                         textAlign: "justify",
-                        padding: "0px 30px",
+                        lineHeight: "3rem",
+                        background:
+                          "linear-gradient(to right, #DA619C, #FF844A)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
                       }}
                     >
-                      Before you begin the key generation process, there are a
-                      few important points to keep in mind
+                      Keep in mind
                     </h3>
-                    <div style={{ padding: "0px 30px" }}>
-                      <p
-                        className="text-white mb-4 text-sm"
-                        style={{ textAlign: "justify", fontSize: "1rem" }}
+                    <div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
                       >
-                        Prepare pen and paper to write down important
-                        information. This includes the 24-word secret recovery
-                        phrase (also called the “mnemonic”, or the “seed
-                        phrase”) and the keystore password. Safely storing and
-                        keeping these details secure is your responsibility.
-                      </p>
-                      <p
-                        className="text-white mb-4 text-sm"
-                        style={{ textAlign: "justify", fontSize: "1rem" }}
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Keep securely 24 words recovery phrase and key-store
+                          password
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
                       >
-                        It is vital to have multiple secure backups of your
-                        secret recovery phrase and password. The secret recovery
-                        phrase is the only way to withdraw your stake, so treat
-                        it with extreme care. Losing this information will
-                        result in permanent loss of access to your funds.
-                      </p>
-                      <p
-                        className="text-white mb-4 text-sm"
-                        style={{ textAlign: "justify", fontSize: "1rem" }}
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          The secret recovery phrase is the only way to withdraw
+                          your stake.
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
                       >
-                        If possible, use an air-gapped computer during the key
-                        generation process. An air-gapped computer is one that
-                        is not and has not been connected to any network,
-                        minimizing the risk of exposing your secret recovery
-                        phrase. If an air-gapped computer is not available,
-                        ensure you disconnect from the internet by turning off
-                        all networking options (unplugging Ethernet, switching
-                        off Wi-Fi, etc.) while generating your keys.
-                      </p>
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Losing this information will result in permanent loss
+                          of access to your funds.
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
+                      >
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Ensure you disconnect from internet to minimize the
+                          risk of exposing your recovery phrase.
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -254,75 +317,119 @@ function KeyGeneration() {
                       background: "linear-gradient(to right, #A257EC, #D360A6)",
                       textAlign: "center",
                       color: "white",
-                      marginTop: "30px",
+                      marginTop: "10px",
                     }}
                     className=" text-white py-2 px-4 rounded-md shadow-lg text-center"
                   >
-                    Accept Terms
+                    Got it
                   </button>
                 </>
               )}
               {popupType === "gui" && (
                 <>
-                  <h3
-                    className="font-semibold text-white mb-4"
-                    style={{
-                      letterSpacing: "1px",
-                      lineHeight: "auto",
-                      fontSize: "1.7rem",
-                      textAlign: "justify",
-                      padding: "0px 30px",
-                    }}
-                  >
-                    Before you begin the key generation process, there are a few
-                    important points to keep in mind
-                  </h3>
-                  <div style={{ padding: "0px 30px" }}>
-                    <p
-                      className="text-white mb-4 text-sm"
-                      style={{ textAlign: "justify", fontSize: "1rem" }}
+                  <div>
+                    <h3
+                      className="font-semibold text-white mb-4"
+                      style={{
+                        borderRadius: "8px",
+                        fontSize: "1.7rem",
+                        textAlign: "justify",
+                        lineHeight: "3rem",
+                        background:
+                          "linear-gradient(to right, #DA619C, #FF844A)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
                     >
-                      Prepare pen and paper to write down important information.
-                      This includes the 24-word secret recovery phrase (also
-                      called the “mnemonic”, or the “seed phrase”) and the
-                      keystore password. Safely storing and keeping these
-                      details secure is your responsibility.
-                    </p>
-                    <p
-                      className="text-white mb-4 text-sm"
-                      style={{ textAlign: "justify", fontSize: "1rem" }}
-                    >
-                      It is vital to have multiple secure backups of your secret
-                      recovery phrase and password. The secret recovery phrase
-                      is the only way to withdraw your stake, so treat it with
-                      extreme care. Losing this information will result in
-                      permanent loss of access to your funds.
-                    </p>
-                    <p
-                      className="text-white mb-4 text-sm"
-                      style={{ textAlign: "justify", fontSize: "1rem" }}
-                    >
-                      If possible, use an air-gapped computer during the key
-                      generation process. An air-gapped computer is one that is
-                      not and has not been connected to any network, minimizing
-                      the risk of exposing your secret recovery phrase. If an
-                      air-gapped computer is not available, ensure you
-                      disconnect from the internet by turning off all networking
-                      options (unplugging Ethernet, switching off Wi-Fi, etc.)
-                      while generating your keys.
-                    </p>
+                      Keep in mind
+                    </h3>
+                    <div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
+                      >
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Keep securely 24 words recovery phrase and key-store
+                          password.
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
+                      >
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          The secret recovery phrase is the only way to withdraw
+                          your stake.
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
+                      >
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Losing this information will result in permanent loss
+                          of access to your funds.
+                        </span>
+                      </div>
+                      <div
+                        className="text-white mb-4 text-sm flex items-start"
+                        style={{ fontSize: "1rem" }}
+                      >
+                        <ChevronRight
+                          className="mt-[2px] text-[#FFA800]"
+                          size={16}
+                          style={{
+                            border: "1px solid #FFA800",
+                            borderRadius: "10px",
+                            marginRight: "8px",
+                          }}
+                        />
+                        <span style={{ textAlign: "justify" }}>
+                          Ensure you disconnect from internet to minimize the
+                          risk of exposing your recovery phrase.
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
                   <button
                     onClick={acceptTerms}
                     style={{
                       background: "linear-gradient(to right, #A257EC, #D360A6)",
-
+                      textAlign: "center",
                       color: "white",
-                      marginTop: "30px",
+                      marginTop: "10px",
                     }}
-                    className=" text-white py-2 px-4 rounded-md shadow-lg"
+                    className=" text-white py-2 px-4 rounded-md shadow-lg text-center"
                   >
-                    Accept Terms
+                    Got it
                   </button>
                 </>
               )}
@@ -393,7 +500,7 @@ function KeyGeneration() {
                     }}
                   />
                   <p className="mb-2 text-gray-300">
-                    Go to Releases Pages of GitHub repo:
+                    Go to Release Pages of GitHub repo:
                   </p>
                 </div>
 
@@ -405,6 +512,16 @@ function KeyGeneration() {
                   >
                     https://github.com/ethereum/staking-deposit-cli/releases
                   </a>
+                  <button
+                    className="text-gray-400 hover:text-white"
+                    onClick={() =>
+                      handleCopy(
+                        "https://github.com/ethereum/staking-deposit-cli/releases"
+                      )
+                    }
+                  >
+                    <Copy size={20} />
+                  </button>
                 </div>
                 <div className="flex items-start space-x-2">
                   <ChevronRight
@@ -480,11 +597,7 @@ function KeyGeneration() {
                       )
                     }
                   >
-                    {copied ? (
-                      <CheckCircle size={20} className="text-green-500" />
-                    ) : (
-                      <Copy size={20} />
-                    )}
+                    <Copy size={20} />
                   </button>
                 </div>
                 <div className="flex items-start space-x-2">
@@ -509,6 +622,16 @@ function KeyGeneration() {
                   >
                     https://github.com/ethereum/staking-deposit-cli#language-argument
                   </a>
+                  <button
+                    className="text-gray-400 hover:text-white"
+                    onClick={() =>
+                      handleCopy(
+                        "https://github.com/ethereum/staking-deposit-cli#language-argument"
+                      )
+                    }
+                  >
+                    <Copy size={20} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -641,15 +764,11 @@ function KeyGeneration() {
                     className="text-gray-400 hover:text-white"
                     onClick={() =>
                       handleCopy(
-                        "./deposit new-mnemonic --language english --num_validators 1 --chain mainnet --eth1_withdrawal_address <ETH1 ADDRESS>"
+                        "https://wagyu.gg/"
                       )
                     }
                   >
-                    {copied ? (
-                      <CheckCircle size={20} className="text-green-500" />
-                    ) : (
-                      <Copy size={20} />
-                    )}
+                    <Copy size={20} />
                   </button>
                 </div>
                 <div className="flex items-start space-x-2">
@@ -985,6 +1104,7 @@ function KeyGeneration() {
               As a user looking to participate in staking, you will need to
               generate your own staking keys.
             </div>
+
             <div style={{ textAlign: "center" }}>
               <button
                 onClick={() => openPopup("terminal")}
@@ -1015,9 +1135,27 @@ function KeyGeneration() {
                 GUI commands
               </button>
             </div>
+            <button
+              onClick={openPopupBlur}
+              className="text-[#FC8150] flex items-center space-x-2 text-sm"
+            >
+              <MessageCircleQuestionIcon className="w-4 h-4" />
+              <span>Learn more about Key Generation</span>
+            </button>
           </div>
         )}
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 }

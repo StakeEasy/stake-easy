@@ -12,8 +12,8 @@ const Landing = () => {
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
-  const handleMainSteps = (url: string) => {
-    router.push(url);
+  const handleMainSteps = () => {
+    router.push("/join");
   };
 
   const closePopup = () => {
@@ -130,7 +130,7 @@ const Landing = () => {
                   <h3 className="text-justify mb-1 text-lg">Get SSV Tokens</h3>
                 </div>
 
-                <div className="text-justify mb-2">
+                <div className="text-justify mb-2 text-sm">
                   Lorem, ipsum dolor sit amet consectetur adipisicing elit.
                   Possimus vero nihil voluptates aliquam qui, debitis placeat
                   officiis cumque, nobis molestias voluptas nostrum aspernatur
@@ -191,7 +191,7 @@ const Landing = () => {
                   <h3 className="text-justify mb-1 text-lg">Download Wagyu</h3>
                 </div>
 
-                <div className="mb-2 text-justify">
+                <div className="mb-2 text-justify text-sm">
                   Lorem, ipsum dolor sit amet consectetur adipisicing elit.
                   Possimus vero nihil voluptates aliquam qui, debitis placeat
                   officiis cumque, nobis molestias voluptas nostrum aspernatur
@@ -216,14 +216,14 @@ const Landing = () => {
                 </div>
 
                 <button
-                  onClick={() => handleMainSteps("/join")}
+                  onClick={handleMainSteps}
                   style={{
                     background: "linear-gradient(to right, #A257EC, #D360A6)",
                     textAlign: "center",
                     color: "white",
                     marginTop: "30px",
                   }}
-                  className="w-[30%] text-white hover:scale-110 duration-500 py-2 px-4 rounded-md shadow-lg text-center"
+                  className="w-[30%] text-white hover:scale-110 duration-500 py-2 px-4 rounded-md shadow-lg text-center transition 0.3"
                 >
                   Stake
                 </button>
@@ -237,13 +237,11 @@ const Landing = () => {
       <Toaster
         toastOptions={{
           style: {
-            fontSize: "18px",
-            backgroundColor: "#f28357",
-            opacity: "0.7",
-            color: "#fff",
-            boxShadow: "none",
-            borderRadius: "12px",
-            padding: "6px 10px",
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
           },
         }}
       />

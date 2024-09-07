@@ -1,5 +1,5 @@
 "use client";
-import React, { useState,useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Tooltip } from "antd";
@@ -54,62 +54,63 @@ const steps = [
   },
 ];
 
-const stepDetails: { [key: number]: StepDetails } = {
-  0: {
-    title: "Eigenpod Address",
-    content: [
-      [
-        "You will generate an EigenPod address, which will serve as the withdrawal address for any amounts restaked by your validator. This address is used to manage the funds restaked between different operators",
-      ],
-    ],
-  },
-  1: {
-    title: "Key Generation",
-    content: [
-      [
-        "Here, you will generate your validator key using the Eigenpod address you created earlier. You will need to set a keystore password, which will be used to decrypt your key file later",
-      ],
-      [
-        "Two files named Keystore and Deposit will be created along with a seed phrase. Keep these along with keystore password in a secure and offline location.",
-      ],
-    ],
-  },
-  2: {
-    title: "Validator Registration",
-    content: [
-      [
-        "Here, you will select operators to run your validator on the SSV network. The 3m+1 criteria will ensure that your validator remains operational even if one operator fails. For example, if you select four operators, at least three of them must sign transactions.",
-      ],
-      [
-        "You can choose from a variety of operators, view detailed statistics about their performance and reliability, and make an informed decision. Additionally, you will manage the fees associated with each operator, ensuring that your validator is set up with the right balance of cost and redundancy",
-      ],
-      [
-        "You will also configure the duration for which your selected operators will run. You can choose from predefined time periods or enter a custom duration that suits your needs. The fees for running your operators will vary based on the selected time period. Once you have made your selection, a comprehensive summary of the total fees will be displayed, showing the amount you need to pay to register your validator on the Stake Easy network",
-      ],
-      [
-        "Then you will have to enter a keystore password that you have generated before in the second step with the keystore file under Enter Validator Key step",
-      ],
-    ],
-  },
-  3: {
-    title: "Upload Deposit Data",
-    content: [
-      [
-        " Here, you have to upload the deposit file and confirm the transaction for staking 32 ETH for Validator beacon node activation.",
-      ],
-    ],
-  },
-};
+// const stepDetails: { [key: number]: StepDetails } = {
+//   0: {
+//     title: "Eigenpod Address",
+//     content: [
+//       [
+//         "You will generate an EigenPod address, which will serve as the withdrawal address for any amounts restaked by your validator. This address is used to manage the funds restaked between different operators",
+//       ],
+//     ],
+//   },
+//   1: {
+//     title: "Key Generation",
+//     content: [
+//       [
+//         "Here, you will generate your validator key using the Eigenpod address you created earlier. You will need to set a keystore password, which will be used to decrypt your key file later",
+//       ],
+//       [
+//         "Two files named Keystore and Deposit will be created along with a seed phrase. Keep these along with keystore password in a secure and offline location.",
+//       ],
+//     ],
+//   },
+//   2: {
+//     title: "Select operators",
+//     content: [
+//       [
+//         "Here, you will select operators to run your validator on the SSV network. The 3m+1 criteria will ensure that your validator remains operational even if one operator fails. For example, if you select four operators, at least three of them must sign transactions.",
+//       ],
+//       [
+//         "You can choose from a variety of operators, view detailed statistics about their performance and reliability, and make an informed decision. Additionally, you will manage the fees associated with each operator, ensuring that your validator is set up with the right balance of cost and redundancy",
+//       ],
+//       [
+//         "You will also configure the duration for which your selected operators will run. You can choose from predefined time periods or enter a custom duration that suits your needs. The fees for running your operators will vary based on the selected time period. Once you have made your selection, a comprehensive summary of the total fees will be displayed, showing the amount you need to pay to register your validator on the Stake Easy network",
+//       ],
+//       [
+//         "Then you will have to enter a keystore password that you have generated before in the second step with the keystore file under Enter Validator Key step",
+//       ],
+//     ],
+//   },
+//   3: {
+//     title: "Upload Deposit Data",
+//     content: [
+//       [
+//         " Here, you have to upload the deposit file and confirm the transaction for staking 32 ETH for Validator beacon node activation.",
+//       ],
+//     ],
+//   },
+// };
 
 function Stepper() {
   // Initialize currentStep based on the query parameter
-  
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
- const router = useRouter();
+  const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(0);
+  const isNextDisabled = currentStep === 2; // Disable when on step 3 (index 2)
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
@@ -140,7 +141,10 @@ function Stepper() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
         closePopup();
       }
     };
@@ -157,11 +161,11 @@ function Stepper() {
   }, [showPopup]);
 
   return (
-    <div className="w-full my-[10px] bg-transparent rounded-xl flex flex-col justify-between ">
+    <div className="w-full my-[10px] bg-transparent rounded-xl flex flex-col justify-between relative">
       <Image
         src={starImg}
         alt=""
-        className="w-70 h-70 absolute bottom-16 left-0"
+        className="w-70 h-70 absolute bottom-[0] left-5"
       />
       <div className="mb-12 relative w-[80%] m-auto">
         <div className="flex justify-between items-center  relative">
@@ -215,7 +219,6 @@ function Stepper() {
       </div>
 
       <div>
-        
         <CurrentStepComponent />
       </div>
 
@@ -237,7 +240,10 @@ function Stepper() {
         </button>
         <button
           onClick={nextStep}
-          className="px-6 py-2  disabled:opacity-50 transition-colors flex items-center"
+          disabled={isNextDisabled}
+          className={`px-6 py-2 transition-colors flex items-center ${
+            isNextDisabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           style={{
             border: "1px solid transparent",
             borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
@@ -250,7 +256,7 @@ function Stepper() {
           <ChevronRight size={20} className="ml-2" />
         </button>
       </div>
-
+      {/* 
       <AnimatePresence>
         {showPopup && (
           <motion.div
@@ -260,7 +266,7 @@ function Stepper() {
             className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
           >
             <motion.div
-            ref={popupRef}
+              ref={popupRef}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -272,17 +278,21 @@ function Stepper() {
                 textAlign: "center",
                 background: "linear-gradient(to right, #121212, #252525)",
                 boxShadow: "18px 26px 70px 0px rgba(255, 231, 105, 0.09);",
-                padding: "4rem 3rem",
+                padding: "3rem 2rem",
               }}
               className=" rounded-lg max-w-2xl w-full  relative"
             >
               <div className="flex justify-between items-center mb-4 ">
                 <h1
-                  className="inline-block 3 py-1  text-sm mb-3"
+                  className=" py-1  text-sm "
                   style={{
                     borderRadius: "8px",
                     fontSize: "1.7rem",
                     textAlign: "justify",
+                    lineHeight: "3rem",
+                    background: "linear-gradient(to right, #DA619C, #FF844A)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   {stepDetails[currentStep].title}
@@ -300,14 +310,14 @@ function Stepper() {
 
               <div className="space-y-4 text-justify">
                 {stepDetails[currentStep].content.map((paragraph, index) => (
-                  <p key={index} className="text-gray-300">
+                  <div key={index} className="text-gray-300 flex">
                     {paragraph.map((line, lineIndex) => (
                       <React.Fragment key={lineIndex}>
                         {line}
                         {lineIndex < paragraph.length - 1 && <br />}
                       </React.Fragment>
                     ))}
-                  </p>
+                  </div>
                 ))}
               </div>
               <button
@@ -325,9 +335,9 @@ function Stepper() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
-      <div className="relative inline-flex items-center text-white py-2 px-4 rounded-md justify-end">
+      {/* <div className="relative inline-flex items-center text-white py-2 px-4 rounded-md justify-end">
         <Tooltip
           title={"Show Details"}
           color="#121212"
@@ -342,9 +352,10 @@ function Stepper() {
             <MessageCircleQuestionIcon size={35} />
           </button>
         </Tooltip>
-      </div>
+      </div> */}
     </div>
   );
 }
 
 export default Stepper;
+
