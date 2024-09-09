@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAccount } from 'wagmi';
-import { Contract, ethers } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import { Contract, ethers, BrowserProvider } from 'ethers';
 import { CheckCircle, CloudUpload, X, MessageCircleQuestionIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "react-hot-toast";
 import depositContractABI from "../utils/depositABI.json";
-import { prefix0X, TransactionStatus } from "../utils/helpers";
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;
 }
 
 declare let window: WindowWithEthereum;
+
+const ETHEREUM_DEPOSIT_CONTRACT_ADDRESS="0x4242424242424242424242424242424242424242"
+const PRICE_PER_VALIDATOR=32
 
 function UploadDepositData() {
   const [file, setFile] = useState<File | null>(null);
@@ -25,32 +26,36 @@ function UploadDepositData() {
   const [txHash, setTxHash] = useState<string | null>(null);
 
   const { address, isConnected, chain } = useAccount();
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
+  const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  const [contract, setContract] = useState<Contract | null>(null);
 
-  const contract = new Contract(
-    process.env.DEPOSIT_CONTRACT_ADDRESS as string,
-    depositContractABI,
-    signer
-  );
+  useEffect(() => {
+    if (window.ethereum) {
+      const newProvider = new BrowserProvider(window.ethereum);
+      setProvider(newProvider);
 
-  const updateTransactionStatus = (
-    pubkey: string,
-    status: TransactionStatus,
-    txHash?: string
-  ) => {
-    // update transaction status
+      const newContract = new Contract(
+        ETHEREUM_DEPOSIT_CONTRACT_ADDRESS,
+        depositContractABI,
+        newProvider
+      );
+      setContract(newContract);
+    }
+  }, []);
+
+  const prefix0X = (key: string): string => {
+    return key.startsWith('0x') ? key : `0x${key}`;
   };
-
-  const startDepositTransaction = async () => {
+  
+  const startDepositTransacion = async () => {
     setError(null);
     setIsDepositLoading(true);
     setIsDepositSuccess(false);
     setTxHash(null);
 
-    if (depositData.pubkey === null || depositData.withdrawal_credentials === null || depositData.signature === null || depositData.deposit_data_root === null) {
-      setError("Invalid JSON file. Please upload a valid deposit data file.");
-      toast.error("Invalid JSON file. Please upload a valid deposit data file.");
+    if (!depositData || !depositData[0] || !contract || !provider) {
+      setError("Invalid data or contract not initialized. Please try again.");
+      toast.error("Invalid data or contract not initialized. Please try again.");
       setIsDepositLoading(false);
       return;
     }
@@ -62,10 +67,8 @@ function UploadDepositData() {
       return;
     }
 
-    
     try {
-      console.log("Deposit data:", depositData);
-      const gasPrice = await provider.getGasPrice();
+      const gasPrice = (await provider.getFeeData()).gasPrice;
 
       const pubkey = prefix0X(depositData[0].pubkey);
       const withdrawal_credentials = prefix0X(depositData[0].withdrawal_credentials);
@@ -73,35 +76,32 @@ function UploadDepositData() {
       const deposit_data_root = prefix0X(depositData[0].deposit_data_root);
 
       const tx = await contract.deposit(
-        ethers.utils.arrayify(pubkey),
-        ethers.utils.arrayify(withdrawal_credentials),
-        ethers.utils.arrayify(signature),
+        ethers.getBytes(pubkey),
+        ethers.getBytes(withdrawal_credentials),
+        ethers.getBytes(signature),
         deposit_data_root,
         {
           gasPrice: gasPrice,
-          value: parseEther((process.env.PRICE_PER_VALIDATOR as string).toString()),
+          value: ethers.parseEther(PRICE_PER_VALIDATOR.toString()),
         }
       );
 
       setTxHash(tx.hash);
-      updateTransactionStatus(depositData.pubkey, TransactionStatus.PENDING, tx.hash);
 
       const receipt = await tx.wait();
       if (receipt.status) {
         setIsDepositSuccess(true);
         toast.success("Deposit transaction successful!");
-        updateTransactionStatus(depositData.pubkey, TransactionStatus.SUCCEEDED, tx.hash);
-      } else {
-        updateTransactionStatus(depositData.pubkey, TransactionStatus.FAILED, tx.hash);
       }
     } catch (error) {
+      console.error("Deposit transaction error:", error);
       setError("Failed to initiate deposit transaction. Please try again.");
       toast.error("Failed to initiate deposit transaction. Please try again.");
+    } finally {
       setIsDepositLoading(false);
-      setIsDepositSuccess(false);
-    } 
+    }
   }
-
+  
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem("hasSeenUploadPopup");
     if (!hasSeenPopup) {
@@ -111,8 +111,9 @@ function UploadDepositData() {
   }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0] || null;
-    setFile(selectedFile);
+    if (event.target.files && event.target.files.length > 0) {
+      setFile(event.target.files[0]);
+    }
   };
 
   useEffect(() => {
@@ -138,7 +139,6 @@ function UploadDepositData() {
   const openPopup = () => {
     setShowPopup(true);
   };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -298,7 +298,7 @@ function UploadDepositData() {
                 />
               </div>
               <button
-                onClick={startDepositTransaction}
+                onClick={startDepositTransacion}
                 disabled={!file || !isConnected || isDepositLoading}
                 style={{
                   border: "1px solid transparent",
@@ -315,10 +315,10 @@ function UploadDepositData() {
                 }`}
               >
                 {isDepositLoading ? 'Staking...' : 'Stake'}
-            </button>
-            {isDepositSuccess && (
-              toast.success("Stake successful! Transaction hash: " + txHash))
-            }
+              </button>
+              {isDepositSuccess && (
+                toast.success("Stake successful! Transaction hash: " + txHash))
+              }
             </div>
           </div>
         </div>

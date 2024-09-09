@@ -2,20 +2,11 @@ import { ethers } from 'ethers';
 import { NextRequest, NextResponse } from 'next/server';
 import contractABI from '../../utils/ssvNetworkABI.json';
 
-// Define the contract address
-const contractAddress = "0x38A4794cCEd47d3baf7370CcC43B560D3a1beEFA";
-
-// Create a provider
-interface WindowWithEthereum extends Window {
-  ethereum?: any;
-}
-declare let window: WindowWithEthereum;
-
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+const provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 const signer = provider.getSigner();
 
 // Create a contract instance
-const contract = new ethers.Contract(contractAddress, contractABI, signer);
+const contract = new ethers.Contract(process.env.SSV_NETWORK_CONTRACT_ADDRESS as string, contractABI, signer);
 
 export async function POST(req: NextRequest) {
   try {

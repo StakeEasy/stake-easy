@@ -3,20 +3,22 @@ import React, { useState, useEffect } from "react";
 import UpArrow2 from "../assets/UpArrow2-New.png";
 import DownArrow2 from "../assets/DownArrow2.png";
 import UpDownArrow from "../assets/UpDownArrow.png";
-import Filter from "../assets/Filter.png";
+import { toast, Toaster } from "react-hot-toast";
 import "../css/OperatorSelectionTable.css";
-import KeyStoreFile from "./KeyStoreFile";
+import UploadKeystoreData from "./UploadKeystoreData";
 import Image from "next/image";
 import icon from "../assets/icon.png";
 
 // Define the type for an operator
 interface Operator {
   id: number;
+  pubkey: string;
   name: string;
   validators: number;
   performance: string;
   yearlyFee: string;
   mev: number;
+  image: string;
 }
 
 export default function OperatorSelectionTable() {
@@ -35,13 +37,17 @@ export default function OperatorSelectionTable() {
   const [parsedPayload, setParsedPayload] = useState<{
     publicKey: string;
     operatorIds: number[];
+    operatorKeys: string[];
     sharesData: string;
     totalFee: number;
+    networkFee: number;
   }>({
     publicKey: "",
     operatorIds: [],
+    operatorKeys: [],
     sharesData: "",
     totalFee: 0,
+    networkFee: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -75,11 +81,13 @@ export default function OperatorSelectionTable() {
         if (data.operators && Array.isArray(data.operators)) {
           const transformedOperators = data.operators.map((op: any) => ({
             id: op.id,
+            pubkey: op.public_key,
             name: op.name,
             validators: 0,
             performance: `${op.performance["30d"].toFixed(2)}%`,
             yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`,
             mev: 0,
+            image: op.logo,
           }));
 
           setOperators(transformedOperators);
@@ -102,17 +110,21 @@ export default function OperatorSelectionTable() {
       0
     );
     const opertorIds = selectedOps.map((op) => op.id);
+    const operatorKeys = selectedOps.map((op) => op.pubkey);
 
     setTotalFee(total);
   
     const paersedPayload = {
       publicKey: "",
       operatorIds: opertorIds,
+      operatorKeys: operatorKeys,
       sharesData: "",
       totalFee: total,
+      networkFee: 0,
     };
 
     setParsedPayload(paersedPayload);
+    // console.log("Parsed Payload:", paersedPayload);
   };
 
   const handleRowSelection = (operator: Operator) => {
@@ -201,7 +213,7 @@ export default function OperatorSelectionTable() {
   };
 
   if (showKeystoreUpload) {
-    return <KeyStoreFile goBack={goBackToOperatorSelection} paersedPayload={parsedPayload} />;
+    return <UploadKeystoreData goBack={goBackToOperatorSelection} parsedPayload={parsedPayload} />;
   }
 
   return (
@@ -365,7 +377,7 @@ export default function OperatorSelectionTable() {
                           }}
                         >
                           <Image
-                            src={icon}
+                            src={operator.image || icon}
                             alt=""
                             style={{
                               borderRadius: "20px",
@@ -523,6 +535,17 @@ export default function OperatorSelectionTable() {
           transform: translate(-50%, -50%);
         }
       `}</style>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 }

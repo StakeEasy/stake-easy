@@ -4,9 +4,10 @@ import { Copy, CheckCircle, ArrowLeft } from "lucide-react";
 import Operator from "./Operator";
 import { Info } from "lucide-react";
 import { Tooltip } from "antd";
-import { ethers } from "ethers";
-import contractABI from "../utils/ssvABI.json";
+import { ethers, providers } from "ethers";
+import contractABI from "../utils/ssvNetworkABI.json";
 import { useAccount } from 'wagmi';
+import { toast, Toaster } from "react-hot-toast";
 
 interface TransactionProps {
   goBack: () => void; 
@@ -16,29 +17,33 @@ interface TransactionProps {
 const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = () => {
-    // navigator.clipboard.writeText(address);
+  console.log("parsedPayload: ", parsedPayload);
+
+  const handleCopy = async (text: any) => {
+    await navigator.clipboard.writeText(text);
     setCopied(true);
+    toast("Copied 🎊🎉");
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleContractInteraction = async (parsedPayload: any) => {
     try {
         const contractAddress = "0x5Dbf9a62BbcC8135AF60912A8B0212a73e4a6629";
+        
+        const provider = new providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
         const contract = new ethers.Contract(contractAddress, contractABI, signer);  
       
         const { publicKey, operatorIds, sharesData } = parsedPayload;
       
-        const amount = 
+        const amount = 1
         const cluster = [0, 0, 0, true, 0];
         
         const transaction = await contract.registerValidator(publicKey, operatorIds, sharesData, amount, cluster);
         const receipt = await transaction.wait();
         
         console.log("Transaction receipt:", receipt);
-      } else {
-        console.error("MetaMask is not installed");
-      }
+
     } catch (error) {
       console.error("Error during contract interaction:", error);
     }
@@ -55,20 +60,31 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back
           </button>
-          <h1 className="text-xl font-bold mb-2">Transaction Details</h1>
-          <p className="text-sm">Validator Public Key</p>
-          <div
-            onClick={copyToClipboard}
-            className="text-xs flex justify-between items-center gap-2 mt-1 py-4 px-2 bg-gray-950 rounded-[8px]"
+          <h1
+            className="text-xl font-bold mb-2"
+            style={{
+              background: "linear-gradient(to right, #DA619C, #FF844A)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
           >
+            Transaction Details
+          </h1>
+          <p className="text-sm">Validator Public Key</p>
+          <div className="text-xs flex justify-between items-center gap-2 mt-1 py-4 px-2 bg-gray-950 rounded-[8px]">
             <span>
               0xa61ffd0c41b28e12b3ce64b85193cd31630505699bf5637b94c998
             </span>
-            {copied ? (
-              <CheckCircle className="w-4 h-4" />
-            ) : (
+            <button
+              className="text-gray-400 hover:text-white"
+              onClick={() => {
+                handleCopy(
+                  "0xa61ffd0c41b28e12b3ce64b85193cd31630505699bf5637b94c998"
+                );
+              }}
+            >
               <Copy className="w-4 h-4" />
-            )}
+            </button>
           </div>
         </div>
         <div className="p-4">
@@ -154,7 +170,7 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
         </div>
         <div className="flex justify-center p-4 gap-4">
           <button
-            onClick={() => handleContractInteraction(parsedPayload)}
+            onClick={handleContractInteraction}
             className="flex-1 font-bold text-white py-2 px-4 rounded"
             style={{
               border: "1px solid transparent",
@@ -169,6 +185,17 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
           </button>
         </div>
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 };

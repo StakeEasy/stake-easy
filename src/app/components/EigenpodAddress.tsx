@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { Copy, CheckCircle, X, MessageCircleQuestionIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast, Toaster } from "react-hot-toast";
-import { useAccount } from 'wagmi';
-import { BrowserProvider, Contract, ethers } from 'ethers';
-import eigenPodManagerAbi from '../utils/eigenpodABI.json';
+import { useAccount } from "wagmi";
+import { BrowserProvider, Contract } from "ethers";
+import eigenPodManagerAbi from "../utils/eigenpodABI.json";
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;
@@ -16,9 +16,11 @@ const EigenpodAddress: React.FC = () => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [podAddress, setPodAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [createLoading, setCreateLoading] = useState(false);
-  const [getLoading, setGetLoading] = useState(false);
-  const [currentAddress, setCurrentAddress] = useState("EigenPod Address not created yet");
+  const [creatingLoading, setCreatingLoading] = useState(false);
+  const [gettingLoading, setGettingLoading] = useState(false);
+  const [currentAddress, setCurrentAddress] = useState(
+    "EigenPod Address not created yet"
+  );
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -32,10 +34,10 @@ const EigenpodAddress: React.FC = () => {
 
   useEffect(() => {
     const initializeContract = async () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
+      if (typeof window !== "undefined" && window.ethereum) {
         try {
           const provider = new BrowserProvider(window.ethereum);
-          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          await window.ethereum.request({ method: "eth_requestAccounts" });
           const signer = await provider.getSigner();
           const contractInstance = new Contract(
             process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string,
@@ -44,7 +46,7 @@ const EigenpodAddress: React.FC = () => {
           );
           setContract(contractInstance);
         } catch (error) {
-          const err = error as { code?: number, message?: string };
+          const err = error as { code?: number; message?: string };
           if (err.code === -32002) {
             console.error(
               "A request to connect your wallet is already pending. Please check your MetaMask extension."
@@ -70,103 +72,76 @@ const EigenpodAddress: React.FC = () => {
 
   const createPod = async (): Promise<string | null> => {
     if (!contract) {
-      console.error('Contract not available');
+      console.error("Contract not available");
       return null;
     }
-
     try {
-      // console.log('Checking if pod already exists...');
-      // console.log("Address: ", address);
       const podExists = await contract.hasPod(address);
-
       if (podExists) {
         const existingPod = await contract.getPod(address);
         toast.success(`Pod already exists!`);
         setPodAddress(existingPod);
         return existingPod;
       }
-
       const tx = await contract.createPod();
       const receipt = await tx.wait();
-      
       const newPodAddress = await contract.getPod(address);
       toast.success(`Pod created successfully!`);
       setPodAddress(newPodAddress);
       return newPodAddress;
     } catch (error) {
-      // console.error('Error creating EigenPod:', error);
-      toast.error('Error creating EigenPod. Check the console for details.');
+      console.error("Error creating EigenPod:", error);
+      toast.error("Error creating EigenPod. Check the console for details.");
       return null;
     }
   };
 
   const getPodAddress = async (): Promise<string | null> => {
     if (!contract || !address) {
-      toast.error('Contract or address not available');
+      console.error("Contract or address not available");
       return null;
     }
-  
     try {
       const podExists = await contract.hasPod(address);
-      
       if (podExists) {
         const existingPod = await contract.getPod(address);
         setPodAddress(existingPod);
         return existingPod;
       } else {
-        toast.error("No EigenPod Address found."); 
+        toast.error("No EigenPod Address found.");
         return null;
       }
     } catch (error) {
-      console.error('Error retrieving pod information:', error);
+      console.error("Error retrieving pod information:", error);
       return null;
     }
   };
 
-  const saveAddresses = async (
-    walletAddress: string | undefined, 
-    eigenPodAddress: string
-  ) => {
-    try {
-      const response = await fetch('/api/storeAddress', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ walletAddress, eigenPodAddress }),
-      });
-  
-      if (!response.ok) {
-        console.error('Failed to store addresses:', response.statusText);
-        toast.error('Error storing addresses.');
-      } else {
-        console.log('Addresses stored successfully.');
-      }
-    } catch (error) {
-      console.error('Error in storing addresses:', error);
-      toast.error('Error in storing addresses.');
-    }
-  };
-
   const handleCreatePodAddress = async () => {
-    setCreateLoading(true);
+    if (!contract) {
+      console.error("Contract not available");
+      return;
+    }
+    setCreatingLoading(true);
     const newPodAddress = await createPod();
     if (newPodAddress) {
-      await saveAddresses(address, newPodAddress);
       setCurrentAddress(newPodAddress);
     }
-    setCreateLoading(false);
+    setCreatingLoading(false);
   };
 
   const handleGetPodAddress = async () => {
+    if (!contract) {
+      console.error("Contract not available");
+      return;
+    }
     setGettingLoading(true);
     const existingAddress = await getPodAddress();
     if (existingAddress) {
-      await saveAddresses(address, existingAddress);
       setCurrentAddress(existingAddress);
       toast.success(`Current EigenPod Address: ${existingAddress}`);
     }
-    setGetLoading(false);
+    setGettingLoading(false);
   };
 
   const copyToClipboard = () => {
@@ -254,7 +229,6 @@ const EigenpodAddress: React.FC = () => {
                   Eigenpod Address
                 </h1>
               </div>
-
               <button
                 onClick={closePopup}
                 className="absolute top-2 right-2 text-[#FC8150] p-1"
@@ -283,7 +257,6 @@ const EigenpodAddress: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
       <div
         className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-300 ${
           showPopup ? "blur-sm" : ""
@@ -311,7 +284,6 @@ const EigenpodAddress: React.FC = () => {
             <span>Learn more about EigenPod Address</span>
           </button>
         </div>
-
         <div className="space-y-6">
           <div>
             <label
@@ -346,13 +318,12 @@ const EigenpodAddress: React.FC = () => {
               </button>
             </div>
           </div>
-
           <div className="flex space-x-4">
             <button
               onClick={handleCreatePodAddress}
-              disabled={createLoading || !isConnected}
+              disabled={creatingLoading || !isConnected}
               className={`flex-1 bg-[#161515] text-white font-bold py-3 px-4 rounded-md text-sm transition-all duration-300 ${
-                createLoading || !isConnected
+                creatingLoading || !isConnected
                   ? "opacity-75 cursor-not-allowed"
                   : ""
               }`}
@@ -365,11 +336,11 @@ const EigenpodAddress: React.FC = () => {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              {createLoading ? "Creating..." : "Create Pod Address"}
+              {creatingLoading ? "Creating..." : "Create Pod Address"}
             </button>
             <button
               onClick={handleGetPodAddress}
-              disabled={getLoading || !isConnected}
+              disabled={gettingLoading || !isConnected}
               style={{
                 border: "1px solid transparent",
                 borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
@@ -379,17 +350,16 @@ const EigenpodAddress: React.FC = () => {
                 WebkitTextFillColor: "transparent",
               }}
               className={`flex-1 bg-[#161515] text-white font-bold py-3 px-4 rounded-md text-sm transition-all duration-300 ${
-                getLoading || !isConnected
+                gettingLoading || !isConnected
                   ? "opacity-75 cursor-not-allowed"
                   : ""
               }`}
             >
-              {getLoading ? "Getting..." : "Get Pod Address"}
+              {gettingLoading ? "Getting..." : "Get Pod Address"}
             </button>
           </div>
         </div>
       </div>
-
       <Toaster
         toastOptions={{
           style: {

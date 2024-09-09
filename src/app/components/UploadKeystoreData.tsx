@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { CheckCircle, Eye, EyeOff, CloudUpload, ArrowLeft } from "lucide-react";
 import SelectTime from "./SelectTime";
+import { toast, Toaster } from "react-hot-toast";
 
 enum STEPS {
   START = 0,
@@ -16,19 +17,25 @@ interface UploadKeystoreDataProps {
 }
 
 function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) {
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState("lamprost");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showSelectTime, setShowSelectTime] = useState(false);
 
   const [step, setStep] = useState<STEPS>(STEPS.START);
-  const [keySharesData, setKeyShares] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
-  const [newParsedPayload, setNewParsedPayload] = useState<any>({});
-  const [finalPayload, setFinalPayload] = useState<string>('');
+  const [finalPayload, setFinalPayload] = useState(parsedPayload);
 
-  const handleSelectTime  = async () => {
+  const generateKeyShares = async () => {
     setStep(STEPS.DECRYPT_KEYSTORE);
+
+    const operatorIds = parsedPayload.operatorIds;
+    const operatorKeys = parsedPayload.operatorKeys;
+
+    const operatorsData = operatorIds.map((id: string, index: number) => ({
+      id,
+      address: operatorKeys[index],
+    }));
 
     try {
       const response = await fetch('/api/process-key', {
@@ -38,7 +45,6 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
         },
         body: JSON.stringify({ keystoreFile, password, operatorsData }),
       });
-      console.log("response: ", response);
 
       if (!response.ok) {
         throw new Error('Failed to process keystore');
@@ -55,24 +61,27 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
       }
   
       console.log("Parsed data:", data);
-  
+
       setFinalPayload(JSON.stringify(data.payload));
-      setKeyShares(JSON.stringify(data.keyShares));
+      // setKeyShares(JSON.stringify(data.keyShares));
       console.log('KeyShares and Payload received from API');
   
       const parsedPayload = data.payload;
-      setParsedPayload(parsedPayload);
-      // const publicKey = parsedPayload.publicKey;
-      // const operatorIds = parsedPayload.operatorIds;
-      // const shares = parsedPayload.sharesData;
-  
+      setFinalPayload(parsedPayload);
+
+      // Update finalPayload with new data
+      // setFinalPayload((prevPayload: any) => ({
+      //   ...prevPayload,
+      //   ...(data.payload as any)
+      // }));
+
       setStep(STEPS.FINISH);
     } catch (e) {
-      console.error("Error in handleSelectTime:", e);
-      alert((e as Error).message);
+      console.error("Error in generateKeyShares:", e);
+      toast.error((e as Error).message);
       setStep(STEPS.ENTER_PASSWORD);
     }
-  
+
     setShowSelectTime(true);
   };
 
@@ -97,13 +106,8 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
     setShowPassword(!showPassword);
   };
 
-
-  const goBackToSelectTime = () => {
-    setShowSelectTime(false);
-  };
-
   if (showSelectTime) {
-    return <SelectTime goBack={goBackToSelectTime} parsedPayload={parsedPayload} />;
+    return <SelectTime goBack={() => setShowSelectTime(false)} parsedPayload={finalPayload} />;
   }
 
   return (
@@ -186,7 +190,7 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
                 </button>
               </div>
               <button
-                onClick={handleSelectTime}
+                onClick={generateKeyShares}
                 style={{
                   border: "1px solid transparent",
                   borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
@@ -203,6 +207,17 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
           </div>
         </div>
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 }

@@ -131,10 +131,8 @@ const Landing = () => {
                 </div>
 
                 <div className="text-justify mb-2 text-sm">
-                  Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                  Possimus vero nihil voluptates aliquam qui, debitis placeat
-                  officiis cumque, nobis molestias voluptas nostrum aspernatur
-                  pariatur nulla.
+                  To pay the operator and network fee, SSV tokens are required.
+                  If you dont have any, you can get them from the SSV faucet.
                 </div>
 
                 <div className="bg-black p-3 rounded-xl flex justify-between items-center mb-[5px]">
@@ -192,10 +190,9 @@ const Landing = () => {
                 </div>
 
                 <div className="mb-2 text-justify text-sm">
-                  Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                  Possimus vero nihil voluptates aliquam qui, debitis placeat
-                  officiis cumque, nobis molestias voluptas nostrum aspernatur
-                  pariatur nulla.
+                  If you dont have Wagyu installed, you can download it from the
+                  Wagyu website. Wagyu is audited and community accepted GUI tool for
+                  safely generating and managing your staking keys.
                 </div>
 
                 <div className="bg-black p-3 rounded-xl flex justify-between items-center mb-[5px]">

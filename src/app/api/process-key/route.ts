@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SSVKeys, KeyShares, KeySharesItem } from 'ssv-keys';
 
-
-// Handle POST request
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { keystoreFile, password , operatorsData} = body;
-    console.log(operatorsData,"operatorsData");
+    const { keystoreFile, password, operatorsData } = body;
+    console.log(operatorsData, "operatorsData");
 
     if (!keystoreFile || !password || !operatorsData) {
       return NextResponse.json({ message: 'Missing keystore file or password' }, { status: 400 });
@@ -45,25 +43,11 @@ export async function POST(req: NextRequest) {
       { ownerAddress: TEST_OWNER_ADDRESS, ownerNonce: TEST_OWNER_NONCE, privateKey }
     );
 
-    console.log('Payload built:', payload);
+    console.log('Payload built successfully.');
 
-    keySharesItem.update({
-      ownerAddress: TEST_OWNER_ADDRESS,
-      ownerNonce: TEST_OWNER_NONCE,
-      operators,
-      publicKey
-    });
-
-    keyShares.add(keySharesItem);
-
-    console.log('KeyShares ready.');
-
-    return NextResponse.json({
-      payload,
-      keyShares: keyShares.toJson(),
-    });
-  } catch (e) {
-    console.error('Error processing keystore:', e);
-    return NextResponse.json({ message: (e as Error).message }, { status: 500 });
+    return NextResponse.json({ payload }, { status: 200 });
+  } catch (error) {
+    console.error('Error processing keystore:', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
