@@ -85,9 +85,10 @@ const ClusterDashboard: React.FC = () => {
     }
   }, [connectedAddress]);
 
-  const handleValidatorDashboard = () => {
-    router.push("/my-account/validator-dashboard");
+  const handleValidatorDashboard = (clusterId: string, balance: string) => {
+    router.push(`/my-account/validator-dashboard?clusterId=${clusterId}&balance=${balance}`);
   };
+  
 
   const goBack = () => {
     router.push("/join/success");
@@ -112,7 +113,7 @@ const ClusterDashboard: React.FC = () => {
         background: "linear-gradient(274.46deg, #1D1D1D 3.75%, #191919 95.45%)",
         boxShadow: "0px 3.18px 42.01px 0px rgba(0, 0, 0, 0.25)",
         border: "0.4px solid #A6A6A6",
-        borderRadius: "20px",
+        borderRadius: "27px",
       }}
     >
       <button onClick={goBack} className="flex items-center mb-4 text-white">
@@ -163,8 +164,7 @@ const ClusterDashboard: React.FC = () => {
       <div
         className="rounded-lg p-4"
         style={{
-          background:
-            "linear-gradient(344.04deg, #1D1D1D 24.05%, #0F0F0F 92.03%)",
+          background: "linear-gradient(344.04deg, #1D1D1D 24.05%, #0F0F0F 92.03%)",
           borderRadius: "15px",
         }}
       >
@@ -183,10 +183,9 @@ const ClusterDashboard: React.FC = () => {
           <div
             key={cluster.id}
             className="flex items-center text-white rounded-lg p-4 hover:bg-gray-700 transition duration-300 hover:cursor-pointer"
-            onClick={handleValidatorDashboard}
+            onClick={() => handleValidatorDashboard(cluster.clusterId, cluster.balance)}
             style={{
-              background:
-                "linear-gradient(344.04deg, #1D1D1D 24.05%, #0F0F0F 92.03%)",
+              background: "linear-gradient(344.04deg, #1D1D1D 24.05%, #0F0F0F 92.03%)",
               border: "0.4px solid #A6A6A6",
               borderRadius: "15px",
             }}

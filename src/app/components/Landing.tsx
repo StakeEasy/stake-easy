@@ -53,12 +53,12 @@ const Landing = () => {
   return (
     <div className="w-full my-[10px] bg-transparent rounded-xl flex flex-col justify-center items-center">
       <div className="text-white flex flex-col items-center justify-center gap-2 relative mx-auto transition-all duration-300 w-full lg:w-[80%]">
-        <h1 className="text-4xl lg:text-7xl font-bold">Stake - Earn - Spend</h1>
+        <h1 className="text-4xl lg:text-7xl font-bold">Stake without any hassle</h1>
         <h3 className="text-[16px] lg:text-[20px] font-light text-center">
-          Stake ETH, get eETH - the liquid restaking token that rewards
+          Join Ethereum Network as Validator
         </h3>
         <h3 className="text-[16px] lg:text-[20px] font-light text-center">
-          you more across DeFi.
+          Just few clicks away
         </h3>
 
         <button
