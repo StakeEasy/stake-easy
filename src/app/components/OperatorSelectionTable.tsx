@@ -8,6 +8,7 @@ import "../css/OperatorSelectionTable.css";
 import UploadKeystoreData from "./UploadKeystoreData";
 import Image from "next/image";
 import icon from "../assets/icon.png";
+import { mev } from "viem/chains";
 
 interface Operator {
   id: number;
@@ -26,6 +27,7 @@ export default function OperatorSelectionTable() {
   const [selectedOperators, setSelectedOperators] = useState<Operator[]>([]);
   const [clusterSize, setClusterSize] = useState<number>(4);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [operatorsSelected, setOperatorsSelected] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Operator;
     direction: "ascending" | "descending" | null;
@@ -73,7 +75,8 @@ export default function OperatorSelectionTable() {
             validators: op.validators_count,
             performance: `${op.performance["30d"].toFixed(2)}%`,
             yearlyFee: `${(parseInt(op.fee) / 1e9).toFixed(2)} SSV`,
-            mev: 0,
+            // there is no mev field in the response, instead, we have mev_relays field, which is a string, with realys separated by comma, set mev as the number of commas + 1, if the string is empty, set mev as 0, if the string is not empty, but there is no comma, set mev as 1
+            mev: op.mev_relays === "" ? 0 : op.mev_relays.includes(",") ? op.mev_relays.split(",").length : 1,
             image: op.logo
           }));
 
@@ -113,7 +116,8 @@ export default function OperatorSelectionTable() {
         updatedOperators = prev;
       }
 
-      calculateTotalFee(updatedOperators); // Calculate fee whenever selection changes
+      calculateTotalFee(updatedOperators);
+      setOperatorsSelected(updatedOperators.length === clusterSize);
       return updatedOperators;
     });
   };
@@ -463,6 +467,7 @@ export default function OperatorSelectionTable() {
           </div>
           <button
             onClick={handleKeystoreUpload}
+            disabled={!operatorsSelected}
             style={{
               border: "1px solid transparent",
               borderImage: "linear-gradient(to right, #DA619C , #FF844A )",

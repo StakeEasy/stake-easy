@@ -9,7 +9,7 @@ interface OperatorCardProps {
   id: number;
   status: string;
   performance: string;
-  fee: string;
+  // fee: string;
 }
 
 const OperatorCard: React.FC<OperatorCardProps> = ({
@@ -17,7 +17,7 @@ const OperatorCard: React.FC<OperatorCardProps> = ({
   id,
   status,
   performance,
-  fee,
+  // fee,
 }) => {
   return (
     <div
@@ -67,7 +67,7 @@ const OperatorCard: React.FC<OperatorCardProps> = ({
             </Tooltip>
           </div>
           <div className="text-xs">30D Perform</div>
-          <div className="text-xs">Yearly Fee</div>
+          {/* <div className="text-xs">Yearly Fee</div> */}
         </div>
         <div className="flex items-center justify-between pb-4 pl-4 pr-4">
           <div
@@ -80,7 +80,7 @@ const OperatorCard: React.FC<OperatorCardProps> = ({
             {status}
           </div>
           <div className="text-xs">{performance}</div>
-          <div className="text-xs">{fee}</div>
+          {/* <div className="text-xs">{fee}</div> */}
         </div>
       </div>
     </div>

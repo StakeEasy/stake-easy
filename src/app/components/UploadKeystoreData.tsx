@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectTime from "./SelectTime";
+import { toast, Toaster } from "react-hot-toast";
 
 enum STEPS {
   START = 0,
@@ -26,7 +27,7 @@ interface UploadKeystoreDataProps {
 }
 
 function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreDataProps) {
-  const [password, setPassword] = useState("lamprost");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showSelectTime, setShowSelectTime] = useState(false);
@@ -36,11 +37,11 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
   const [finalPayload, setFinalPayload] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
   const [parsedPayload, setParsedPayload] = useState<any>({});
-
-
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // console.log("operatorsData",operatorsData);
-  const handleSelectTime  = async () => {
+  const generateKeyShares  = async () => {
+    setIsGenerating(true);
     setStep(STEPS.DECRYPT_KEYSTORE);
 
     try {
@@ -54,7 +55,7 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
       console.log("response: ", response);
 
       if (!response.ok) {
-        throw new Error('Failed to process keystore');
+        toast.error('Failed to process keystore');
       }
 
       const responseText = await response.text();
@@ -64,25 +65,24 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
         data = JSON.parse(responseText);
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
-        throw new Error('Invalid JSON response from server');
+        toast.error('Invalid JSON response from server');
       }
   
-      console.log("Parsed data:", data);
+      // console.log("Parsed data:", data);
 
       setFinalPayload(JSON.stringify(data.payload));
       setKeyShares(JSON.stringify(data.keyShares));
       console.log('KeyShares and Payload received from API');
-  
+      toast.success('KeyShares generated successfully!');
+
       const parsedPayload = data.payload;
       setParsedPayload(parsedPayload);
-      // const publicKey = parsedPayload.publicKey;
-      // const operatorIds = parsedPayload.operatorIds;
-      // const shares = parsedPayload.sharesData;
   
       setStep(STEPS.FINISH);
+      setIsGenerating(false);
     } catch (e) {
-      console.error("Error in handleSelectTime:", e);
-      alert((e as Error).message);
+      console.error("Error in generateKeyShares:", e);
+      toast.error('Failed to generate key shares');
       setStep(STEPS.ENTER_PASSWORD);
     }
   
@@ -198,7 +198,8 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
                 </button>
               </div>
               <button
-                onClick={handleSelectTime}
+                onClick={generateKeyShares}
+                disabled={!file || !password || isGenerating}
                 style={{
                   border: "1px solid transparent",
                   borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
@@ -209,12 +210,23 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
                 }}
                 className=" grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold"
               >
-                Next
+                {isGenerating ? 'Generating...' : 'Generate Key Shares'}
               </button>
             </div>
           </div>
         </div>
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 }

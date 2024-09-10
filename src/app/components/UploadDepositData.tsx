@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from 'wagmi'
 import { Contract, ethers, BrowserProvider } from 'ethers';
 import depositContractABI from "../utils/depositABI.json";
+import { toast, Toaster } from "react-hot-toast";
 
 const DEPOSIT_CONTRACT_ADDRESS = '0x4242424242424242424242424242424242424242';
 const PRICE_PER_VALIDATOR = 32;
@@ -133,16 +134,61 @@ function UploadDepositData() {
     }
   };
 
+  const ValidateJSON = (data: any): boolean => {
+    const requiredFields = {
+      pubkey: 98,
+      withdrawal_credentials: 44,
+      amount: 32000000000,
+      signature: 192,
+      deposit_message_root: 64,
+      deposit_data_root: 64,
+      fork_version: 8,
+      network_name: ["mainnet", "holesky"],
+      deposit_cli_version: 5
+    };
+  
+    let data1 = data[0];
+  
+    for (const field in requiredFields) {
+      if (!data1.hasOwnProperty(field) || data1[field] === null || data1[field] === "") {
+        return false;
+      }
+  
+      if (field === "network_name") {
+        if (!requiredFields[field].includes(data1[field])) {
+          return false;
+        }
+      } else if (field === "amount") {
+        if (data1[field] !== requiredFields[field]) {
+          return false;
+        }
+      } else if (data1[field].length !== requiredFields[field]) {
+        return false;
+      }
+    }
+  
+    return true;
+  };
+
   useEffect(() => {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const jsonContent = JSON.parse(event.target?.result as string);
-          setDepositData(jsonContent);
+          if (ValidateJSON(jsonContent)) {
+            setDepositData(jsonContent);
+            setError(null);
+          } else {
+            toast.error("Invalid deposit data format. Please check your file and try again.");
+            setError("Invalid deposit data format. Please check your file and try again.");
+            setDepositData(null);
+          }
         } catch (error) {
           console.error("Error parsing JSON file:", error);
+          toast.error("Error parsing JSON file.");
           setError("Invalid JSON file. Please upload a valid deposit data file.");
+          setDepositData(null);
         }
       };
       reader.readAsText(file);
@@ -316,7 +362,7 @@ function UploadDepositData() {
               </div>
               <button
                 onClick={startDepositTransaction}
-                disabled={!file || !isConnected || isDepositLoading}
+                disabled={!file || !isConnected || isDepositLoading || isDepositSuccess}
                 style={{
                   border: "1px solid transparent",
                   borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
@@ -330,15 +376,26 @@ function UploadDepositData() {
                 {isDepositLoading ? 'Staking...' : 'Stake ETH'}
               </button>
               {isDepositSuccess && (
-                <p className="text-green-500">Stake successful! Transaction hash: {txHash}</p>
+                toast.success("Deposit transaction successful.")
               )}
               {error && (
-                <p className="text-red-500">{error}</p>
+                toast.error("Transaction failed. Please try again.")
               )}
             </div>
           </div>
         </div>
       </div>
+      <Toaster
+        toastOptions={{
+          style: {
+            border: "1px solid transparent",
+            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
+            borderImageSlice: 1,
+            background: "black",
+            color: "white",
+          },
+        }}
+      />
     </div>
   );
 }

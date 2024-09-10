@@ -54,53 +54,6 @@ const steps = [
   },
 ];
 
-// const stepDetails: { [key: number]: StepDetails } = {
-//   0: {
-//     title: "Eigenpod Address",
-//     content: [
-//       [
-//         "You will generate an EigenPod address, which will serve as the withdrawal address for any amounts restaked by your validator. This address is used to manage the funds restaked between different operators",
-//       ],
-//     ],
-//   },
-//   1: {
-//     title: "Key Generation",
-//     content: [
-//       [
-//         "Here, you will generate your validator key using the Eigenpod address you created earlier. You will need to set a keystore password, which will be used to decrypt your key file later",
-//       ],
-//       [
-//         "Two files named Keystore and Deposit will be created along with a seed phrase. Keep these along with keystore password in a secure and offline location.",
-//       ],
-//     ],
-//   },
-//   2: {
-//     title: "Select operators",
-//     content: [
-//       [
-//         "Here, you will select operators to run your validator on the SSV network. The 3m+1 criteria will ensure that your validator remains operational even if one operator fails. For example, if you select four operators, at least three of them must sign transactions.",
-//       ],
-//       [
-//         "You can choose from a variety of operators, view detailed statistics about their performance and reliability, and make an informed decision. Additionally, you will manage the fees associated with each operator, ensuring that your validator is set up with the right balance of cost and redundancy",
-//       ],
-//       [
-//         "You will also configure the duration for which your selected operators will run. You can choose from predefined time periods or enter a custom duration that suits your needs. The fees for running your operators will vary based on the selected time period. Once you have made your selection, a comprehensive summary of the total fees will be displayed, showing the amount you need to pay to register your validator on the Stake Easy network",
-//       ],
-//       [
-//         "Then you will have to enter a keystore password that you have generated before in the second step with the keystore file under Enter Validator Key step",
-//       ],
-//     ],
-//   },
-//   3: {
-//     title: "Upload Deposit Data",
-//     content: [
-//       [
-//         " Here, you have to upload the deposit file and confirm the transaction for staking 32 ETH for Validator beacon node activation.",
-//       ],
-//     ],
-//   },
-// };
-
 function Stepper() {
   // Initialize currentStep based on the query parameter
 
@@ -110,14 +63,14 @@ function Stepper() {
   const router = useRouter();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const isNextDisabled = currentStep === 2; // Disable when on step 3 (index 2)
+  const isNextDisabled = currentStep; // Disable when on step 3 (index 2)
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else if (currentStep === steps.length - 1) {
       // Navigate to dashboard when on the last step
-      router.push("/join/success"); // Adjust the path as needed
+      router.push("/my-account/clusters-dashboard"); // Adjust the path as needed
     }
   };
 

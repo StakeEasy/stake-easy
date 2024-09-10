@@ -44,14 +44,13 @@ const EigenpodAddress: React.FC = () => {
         } catch (error) {
           const err = error as { code?: number; message?: string };
           if (err.code === -32002) {
-            console.error(
-              "A request to connect your wallet is already pending. Please check your MetaMask extension."
-            );
+            console.error("A request to connect your wallet is already pending. Please check your MetaMask extension.");
           } else {
-            console.error("An error occurred:", error);
+            console.error("Wallet Connection Error: ", error);
           }
         }
       } else {
+        toast.error("Ethereum wallet is not detected.");
         console.error("Ethereum wallet is not detected.");
       }
     };
@@ -99,6 +98,7 @@ const EigenpodAddress: React.FC = () => {
       if (podExists) {
         const existingPod = await contract.getPod(address);
         setPodAddress(existingPod);
+        toast.success(`Pod found!`);
         return existingPod;
       } else {
         toast.error("No EigenPod Address found.");
@@ -122,14 +122,14 @@ const EigenpodAddress: React.FC = () => {
         body: JSON.stringify({ walletAddress, eigenPodAddress }),
       });
       if (!response.ok) {
-        console.error("Failed to store addresses:", response.statusText);
-        toast.error("Error storing addresses.");
+        // console.error("Failed to store addresses:", response.statusText);
+        // toast.error("Error storing addresses.");
       } else {
-        console.log("Addresses stored successfully.");
+        // console.log("Addresses stored successfully.");
       }
     } catch (error) {
-      console.error("Error in storing addresses:", error);
-      toast.error("Error in storing addresses.");
+      // console.error("Error in storing addresses:", error);
+      // toast.error("Error in storing addresses.");
     }
   };
   const handleCreatePodAddress = async () => {
@@ -147,7 +147,7 @@ const EigenpodAddress: React.FC = () => {
     if (existingAddress) {
       await saveAddresses(address, existingAddress);
       setCurrentAddress(existingAddress);
-      toast.success(`Current EigenPod Address: ${existingAddress}`);
+      toast.success(`Current EigenPod Address: ${existingAddress.slice(0, 5)}...${existingAddress.slice(-4)}`);
     }
     setGettingLoading(false);
   };

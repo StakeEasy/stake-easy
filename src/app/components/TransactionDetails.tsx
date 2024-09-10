@@ -72,7 +72,7 @@ const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays
 
   return (
     <div className="flex items-center justify-center ">
-      <div className="max-w-2xl mx-auto text-white rounded-lg shadow-md border border-gray-200">
+      <div className="w-[40%] mx-auto text-white rounded-lg shadow-md border border-gray-200">
         <div className="text-white p-4 rounded-t-lg border">
           <button
             onClick={goBack}
