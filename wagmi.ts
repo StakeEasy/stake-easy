@@ -1,26 +1,16 @@
+
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
-  arbitrum,
-  base,
   mainnet,
-  optimism,
-  polygon,
-  sepolia,
-  holesky,
+  holesky
 } from 'wagmi/chains';
-// import { getWalletConnectConnector } from '@rainbow-me/rainbowkit';
 
 export const config = getDefaultConfig({
-  appName: 'stake-easy',
-  projectId: '003cc2d44b51cb4325a4954fec3b28c6',
+  appName: 'RainbowKit demo',
+  projectId: 'f8a6524307e28135845a9fe5811fcaa2',
   chains: [
-    holesky,
     mainnet,
-    // arbitrum,
-    // base,
-    // optimism,
-    // polygon,
-    // sepolia,
+    holesky
   ],
   ssr: true,
 });

@@ -1,21 +1,39 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import TransactionDetails from "./TransactionDetails";
 import { Tooltip } from "antd";
 import { Info } from "lucide-react";
-import { toast, Toaster } from "react-hot-toast";
 
 interface SelectTimeProps {
   goBack: () => void;
   parsedPayload: any;
+  operatorsData: any;
+  totalFee: number;
 }
 
-const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
+const StakingInterface = ({ goBack, parsedPayload, operatorsData, totalFee }: SelectTimeProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [customPeriod, setCustomPeriod] = useState<number | string>(0);
   const [showTxDetails, setShowTxDetails] = useState(false);
-  const [passedParsedPayload, setParsedPayload] = useState(parsedPayload); 
+  const [netFee, setNetFee] = useState(0);
+  const [nDays, setNDays] = useState(0);
+
+  useEffect(() => {
+    if (selectedPeriod === "6 Months") {
+      setNetFee(0.5);
+      setNDays(182);
+    } else if (selectedPeriod === "1 Year") {
+      setNetFee(1);
+      setNDays(365);
+    } else if (selectedPeriod === "Custom Period" && customPeriod) {
+      setNetFee(Number(((Number(customPeriod) / 365) * 1).toFixed(5)));
+      setNDays(Number(customPeriod));
+    } else {
+      setNetFee(0);
+      setNDays(0);
+    }
+  }, [selectedPeriod, customPeriod]);
 
   const handleCustomPeriodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -26,7 +44,7 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period);
     if (period !== "Custom Period") {
-      setCustomPeriod("");
+      setCustomPeriod(""); // Reset custom period input when other options are selected
     }
   };
 
@@ -38,30 +56,37 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
     setShowTxDetails(false);
   };
 
-  if (showTxDetails) {
-    return <TransactionDetails goBack={goBackToTransactionDetails} parsedPayload={passedParsedPayload} />;
-  }
-
-  const getNetworkFee = () => {
-    let netFee = 0;
-    if (selectedPeriod === "6 Months") {
-      netFee = 0.5;
-    } else if (selectedPeriod === "1 Year") {
-      netFee = 1;
-    } else {
-      netFee = Number(((Number(customPeriod) / 365) * 1).toFixed(5));
-    }
-    setParsedPayload({ ...passedParsedPayload, totalNetworkFees: netFee });
-    return netFee;
-  };
+  // const getNetworkFee = () => {
+  //   if (selectedPeriod === "6 Months") {
+  //     setNetFee(0.5);
+  //     setNDays(182);
+  //   } else if (selectedPeriod === "1 Year") {
+  //     setNetFee(1);
+  //     setNDays(365);
+  //   } else {
+  //     setNetFee(Number(((Number(customPeriod) / 365) * 1).toFixed(5)));
+  //     setNDays(Number(customPeriod));  
+  //   }
+  //   // console.log("netFee: ", netFee);
+  //   // console.log("nDays: ", nDays);
+  //   return netFee;
+  // };
 
   const handleRowClick = (period: string) => {
     if (selectedPeriod === period) {
+      // Unselect if the same period is clicked
       setSelectedPeriod("");
     } else {
+      // Select the clicked period
       setSelectedPeriod(period);
     }
   };
+
+  if (showTxDetails) {
+    // console.log("netFee: ", netFee);
+    // console.log("nDays: ", nDays);
+    return <TransactionDetails goBack={goBackToTransactionDetails} parsedPayload={parsedPayload} operatorsData={operatorsData}  totalFee={totalFee} networkFee={netFee} noDays={nDays}/>;
+  }
 
   return (
     <div className="max-w-lg mx-auto text-white shadow-md rounded-lg border-2 border-gray-200 p-6">
@@ -171,7 +196,7 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
               <Info size={10} className="ml-1" />
             </Tooltip>
           </span>
-          <span>{passedParsedPayload.totalOperatorFees}</span>
+          <span>{totalFee}</span>
         </div>
         <div className="flex justify-between">
           <span className="flex items-center ">
@@ -189,7 +214,7 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
               <Info size={10} className="ml-1" />
             </Tooltip>
           </span>
-          <span>{getNetworkFee()} SSV</span>
+          <span>{netFee} SSV</span>
         </div>
         <div className="flex justify-between">
           <span className="flex items-center ">
@@ -213,7 +238,16 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
         <div className="flex justify-between font-bold">
           <span>Total</span>
           <span className="">
-            {passedParsedPayload.totalOperatorFees + getNetworkFee() + 1} SSV
+            {totalFee +
+              1 +
+              (selectedPeriod === "Custom Period"
+                ? Number(((Number(customPeriod) / 365) * 1).toFixed(5))
+                : selectedPeriod === "6 Months"
+                ? 0.5
+                : selectedPeriod === "1 Year"
+                ? 1
+                : 0)}{" "}
+            SSV
           </span>
         </div>
       </div>
@@ -269,17 +303,6 @@ const StakingInterface = ({ goBack, parsedPayload }: SelectTimeProps) => {
           transform: translate(-50%, -50%);
         }
       `}</style>
-      <Toaster
-        toastOptions={{
-          style: {
-            border: "1px solid transparent",
-            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
-            borderImageSlice: 1,
-            background: "black",
-            color: "white",
-          },
-        }}
-      />
     </div>
   );
 };

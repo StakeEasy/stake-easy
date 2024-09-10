@@ -5,12 +5,10 @@ import { toast, Toaster } from "react-hot-toast";
 import { useAccount } from "wagmi";
 import { BrowserProvider, Contract } from "ethers";
 import eigenPodManagerAbi from "../utils/eigenpodABI.json";
-
 interface WindowWithEthereum extends Window {
   ethereum?: any;
 }
 declare let window: WindowWithEthereum;
-
 const EigenpodAddress: React.FC = () => {
   const { address, isConnected } = useAccount();
   const [contract, setContract] = useState<Contract | null>(null);
@@ -23,7 +21,6 @@ const EigenpodAddress: React.FC = () => {
   );
   const [showPopup, setShowPopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem("hasSeenEigenPodPopup");
     if (!hasSeenPopup) {
@@ -31,7 +28,6 @@ const EigenpodAddress: React.FC = () => {
       localStorage.setItem("hasSeenEigenPodPopup", "true");
     }
   }, []);
-
   useEffect(() => {
     const initializeContract = async () => {
       if (typeof window !== "undefined" && window.ethereum) {
@@ -61,7 +57,6 @@ const EigenpodAddress: React.FC = () => {
     };
     initializeContract();
   }, []);
-
   useEffect(() => {
     if (!isConnected) {
       setCurrentAddress("EigenPod Address not created yet");
@@ -69,7 +64,6 @@ const EigenpodAddress: React.FC = () => {
       setCurrentAddress(podAddress);
     }
   }, [isConnected, podAddress]);
-
   const createPod = async (): Promise<string | null> => {
     if (!contract) {
       console.error("Contract not available");
@@ -95,7 +89,6 @@ const EigenpodAddress: React.FC = () => {
       return null;
     }
   };
-
   const getPodAddress = async (): Promise<string | null> => {
     if (!contract || !address) {
       console.error("Contract or address not available");
@@ -116,49 +109,60 @@ const EigenpodAddress: React.FC = () => {
       return null;
     }
   };
-
-  const handleCreatePodAddress = async () => {
-    if (!contract) {
-      console.error("Contract not available");
-      return;
+  const saveAddresses = async (
+    walletAddress: string | undefined,
+    eigenPodAddress: string
+  ) => {
+    try {
+      const response = await fetch("/api/storeAddress", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ walletAddress, eigenPodAddress }),
+      });
+      if (!response.ok) {
+        console.error("Failed to store addresses:", response.statusText);
+        toast.error("Error storing addresses.");
+      } else {
+        console.log("Addresses stored successfully.");
+      }
+    } catch (error) {
+      console.error("Error in storing addresses:", error);
+      toast.error("Error in storing addresses.");
     }
+  };
+  const handleCreatePodAddress = async () => {
     setCreatingLoading(true);
     const newPodAddress = await createPod();
     if (newPodAddress) {
+      await saveAddresses(address, newPodAddress);
       setCurrentAddress(newPodAddress);
     }
     setCreatingLoading(false);
   };
-
   const handleGetPodAddress = async () => {
-    if (!contract) {
-      console.error("Contract not available");
-      return;
-    }
     setGettingLoading(true);
     const existingAddress = await getPodAddress();
     if (existingAddress) {
+      await saveAddresses(address, existingAddress);
       setCurrentAddress(existingAddress);
       toast.success(`Current EigenPod Address: ${existingAddress}`);
     }
     setGettingLoading(false);
   };
-
   const copyToClipboard = () => {
     navigator.clipboard.writeText(currentAddress);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     toast.success("Address copied to clipboard!");
   };
-
   const closePopup = () => {
     setShowPopup(false);
   };
-
   const openPopup = () => {
     setShowPopup(true);
   };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -177,7 +181,6 @@ const EigenpodAddress: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showPopup]);
-
   return (
     <div
       className="relative mx-auto transition-all duration-300 w-[80%]"

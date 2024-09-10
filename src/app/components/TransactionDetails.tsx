@@ -4,20 +4,29 @@ import { Copy, CheckCircle, ArrowLeft } from "lucide-react";
 import Operator from "./Operator";
 import { Info } from "lucide-react";
 import { Tooltip } from "antd";
-import { ethers, providers } from "ethers";
-import contractABI from "../utils/ssvNetworkABI.json";
-import { useAccount } from 'wagmi';
 import { toast, Toaster } from "react-hot-toast";
+import { ethers, BrowserProvider } from "ethers";
+import contractABI from "../utils/ssvABI.json";
+import { useAccount } from 'wagmi';
+import { parse } from "path";
 
 interface TransactionProps {
-  goBack: () => void; 
+  goBack: () => void;
   parsedPayload: any;
+  operatorsData: any;
+  totalFee: number;
+  networkFee: number;
+  noDays: number;
 }
 
-const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
+const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays }: TransactionProps) => {
   const [copied, setCopied] = useState(false);
 
-  console.log("parsedPayload: ", parsedPayload);
+  const copyToClipboard = () => {
+    // navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleCopy = async (text: any) => {
     await navigator.clipboard.writeText(text);
@@ -26,24 +35,36 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const pubkey = parsedPayload.publicKey.slice(0,4) + "..." + parsedPayload.publicKey.slice(-4);
+
   const handleContractInteraction = async (parsedPayload: any) => {
     try {
+      // Check if MetaMask is installed
+      if (typeof window.ethereum !== 'undefined') {
+        // Request account access
+
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
         const contractAddress = "0x5Dbf9a62BbcC8135AF60912A8B0212a73e4a6629";
-        
-        const provider = new providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
+
+        // Create a Web3Provider instance
+        const provider = new BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
         const contract = new ethers.Contract(contractAddress, contractABI, signer);  
-      
+        
+
         const { publicKey, operatorIds, sharesData } = parsedPayload;
-      
-        const amount = 1
+        
+        const amount = ethers.parseEther("1.5"); // Convert 1.5 SSV to Wei
         const cluster = [0, 0, 0, true, 0];
         
+        // Execute contract function
         const transaction = await contract.registerValidator(publicKey, operatorIds, sharesData, amount, cluster);
         const receipt = await transaction.wait();
         
         console.log("Transaction receipt:", receipt);
-
+      } else {
+        console.error("MetaMask is not installed");
+      }
     } catch (error) {
       console.error("Error during contract interaction:", error);
     }
@@ -73,14 +94,12 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
           <p className="text-sm">Validator Public Key</p>
           <div className="text-xs flex justify-between items-center gap-2 mt-1 py-4 px-2 bg-gray-950 rounded-[8px]">
             <span>
-              0xa61ffd0c41b28e12b3ce64b85193cd31630505699bf5637b94c998
+              {pubkey}
             </span>
             <button
               className="text-gray-400 hover:text-white"
               onClick={() => {
-                handleCopy(
-                  "0xa61ffd0c41b28e12b3ce64b85193cd31630505699bf5637b94c998"
-                );
+                handleCopy(pubkey);
               }}
             >
               <Copy className="w-4 h-4" />
@@ -89,10 +108,10 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
         </div>
         <div className="p-4">
           <h2 className="text-lg font-bold mb-2">Selected Operators</h2>
-          <Operator name="ChainUp @" id="25" ssv={0.0} days={182} />
-          <Operator name="Lido - Maria @" id="29" ssv={0.0} days={182} />
-          <Operator name="Lido - Stakely @" id="30" ssv={0.0} days={182} />
-          <Operator name="Lido - Openbitiab @" id="37" ssv={0.0} days={182} />
+          <Operator name={operatorsData[0].name} id={operatorsData[0].id} ssv={operatorsData[0].yearlyFee} days={noDays} />
+          <Operator name={operatorsData[1].name} id={operatorsData[1].id} ssv={operatorsData[1].yearlyFee} days={noDays} />
+          <Operator name={operatorsData[2].name} id={operatorsData[2].id} ssv={operatorsData[2].yearlyFee} days={noDays} />
+          <Operator name={operatorsData[3].name} id={operatorsData[3].id} ssv={operatorsData[3].yearlyFee} days={noDays} />
         </div>
         <div className="text-white p-4 rounded-b-lg">
           <div className="w-[calc(100%+32px)] border-b-2 border-gray-400 -ml-4 mb-2"></div>
@@ -124,7 +143,7 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
                 <Info size={10} className="ml-1" />
               </Tooltip>
             </span>
-            <span>0.0 SSV</span>
+            <span>{totalFee} SSV</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center">
@@ -142,7 +161,7 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
                 <Info size={10} className="ml-1" />
               </Tooltip>
             </span>
-            <span>0.5 SSV</span>
+            <span>{networkFee} SSV</span>
           </div>
           <div className="flex justify-between">
             <span className="flex items-center">
@@ -165,12 +184,12 @@ const Tx = ({ goBack , parsedPayload}: TransactionProps) => {
           <div className="w-[calc(100%+32px)] border-b-2 border-gray-400 mt-2 -ml-4"></div>
           <div className="flex justify-between mt-2">
             <span>Total</span>
-            <span>1.5 SSV</span>
+            <span>{totalFee + networkFee +1} SSV</span>
           </div>
         </div>
         <div className="flex justify-center p-4 gap-4">
           <button
-            onClick={handleContractInteraction}
+            onClick={() => handleContractInteraction(parsedPayload)}
             className="flex-1 font-bold text-white py-2 px-4 rounded"
             style={{
               border: "1px solid transparent",

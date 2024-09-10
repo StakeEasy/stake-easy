@@ -1,7 +1,15 @@
-import React, { useState, useCallback } from "react";
-import { CheckCircle, Eye, EyeOff, CloudUpload, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  CheckCircle,
+  Eye,
+  EyeOff,
+  CloudUpload,
+  X,
+  Info,
+  ArrowLeft,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import SelectTime from "./SelectTime";
-import { toast, Toaster } from "react-hot-toast";
 
 enum STEPS {
   START = 0,
@@ -12,30 +20,28 @@ enum STEPS {
 }
 
 interface UploadKeystoreDataProps {
-  goBack: () => void; 
-  parsedPayload: any;
+  goBack: () => void;
+  operatorsData: any;
+  totalFee: number;
 }
 
-function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) {
+function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreDataProps) {
   const [password, setPassword] = useState("lamprost");
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showSelectTime, setShowSelectTime] = useState(false);
 
   const [step, setStep] = useState<STEPS>(STEPS.START);
+  const [keySharesData, setKeyShares] = useState<string>('');
+  const [finalPayload, setFinalPayload] = useState<string>('');
   const [keystoreFile, setKeystoreFile] = useState<string>('');
-  const [finalPayload, setFinalPayload] = useState(parsedPayload);
+  const [parsedPayload, setParsedPayload] = useState<any>({});
 
-  const generateKeyShares = async () => {
+
+
+  // console.log("operatorsData",operatorsData);
+  const handleSelectTime  = async () => {
     setStep(STEPS.DECRYPT_KEYSTORE);
-
-    const operatorIds = parsedPayload.operatorIds;
-    const operatorKeys = parsedPayload.operatorKeys;
-
-    const operatorsData = operatorIds.map((id: string, index: number) => ({
-      id,
-      address: operatorKeys[index],
-    }));
 
     try {
       const response = await fetch('/api/process-key', {
@@ -45,6 +51,7 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
         },
         body: JSON.stringify({ keystoreFile, password, operatorsData }),
       });
+      console.log("response: ", response);
 
       if (!response.ok) {
         throw new Error('Failed to process keystore');
@@ -63,25 +70,22 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
       console.log("Parsed data:", data);
 
       setFinalPayload(JSON.stringify(data.payload));
-      // setKeyShares(JSON.stringify(data.keyShares));
+      setKeyShares(JSON.stringify(data.keyShares));
       console.log('KeyShares and Payload received from API');
   
       const parsedPayload = data.payload;
-      setFinalPayload(parsedPayload);
-
-      // Update finalPayload with new data
-      // setFinalPayload((prevPayload: any) => ({
-      //   ...prevPayload,
-      //   ...(data.payload as any)
-      // }));
-
+      setParsedPayload(parsedPayload);
+      // const publicKey = parsedPayload.publicKey;
+      // const operatorIds = parsedPayload.operatorIds;
+      // const shares = parsedPayload.sharesData;
+  
       setStep(STEPS.FINISH);
     } catch (e) {
-      console.error("Error in generateKeyShares:", e);
-      toast.error((e as Error).message);
+      console.error("Error in handleSelectTime:", e);
+      alert((e as Error).message);
       setStep(STEPS.ENTER_PASSWORD);
     }
-
+  
     setShowSelectTime(true);
   };
 
@@ -106,8 +110,13 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
     setShowPassword(!showPassword);
   };
 
+
+  const goBackToSelectTime = () => {
+    setShowSelectTime(false);
+  };
+
   if (showSelectTime) {
-    return <SelectTime goBack={() => setShowSelectTime(false)} parsedPayload={finalPayload} />;
+    return <SelectTime goBack={goBackToSelectTime} parsedPayload={parsedPayload} operatorsData={operatorsData} totalFee={totalFee}/>;
   }
 
   return (
@@ -118,23 +127,22 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
       </button>
       {/* Main Content with Blur Effect */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 transition-all duration-300 ">
-        <div className="flex flex-col justify-center">
+        <div className=" flex-col justify-center mt-5">
           <h2
-            className="text-2xl font-bold mb-3"
+            className="text-2xl font-bold text-white"
             style={{
               background: "linear-gradient(to right, #DA619C, #FF844A)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
           >
-            Upload Keystore File
+            Key Store File
           </h2>
 
           <p className="text-md text-white">
-            Submit the keysotre file and corresponding password to generate the keyshares.
-          </p>
-          <p className="text-md text-white">
-            Rest easy, we use proper encryption practises to ensure security of your password. We do not store the password at any place.
+            Add keystore file and password which you had generated in step 2 (
+            Via CLI )
+            <br />( Ensuring you are a authentic user )
           </p>
         </div>
 
@@ -190,7 +198,7 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
                 </button>
               </div>
               <button
-                onClick={generateKeyShares}
+                onClick={handleSelectTime}
                 style={{
                   border: "1px solid transparent",
                   borderImage: "linear-gradient(to right, #DA619C , #FF844A )",
@@ -207,17 +215,6 @@ function UploadKeystoreData({ goBack, parsedPayload }: UploadKeystoreDataProps) 
           </div>
         </div>
       </div>
-      <Toaster
-        toastOptions={{
-          style: {
-            border: "1px solid transparent",
-            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
-            borderImageSlice: 1,
-            background: "black",
-            color: "white",
-          },
-        }}
-      />
     </div>
   );
 }

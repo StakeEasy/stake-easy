@@ -1,10 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useAccount } from 'wagmi';
-import { Contract, ethers, BrowserProvider } from 'ethers';
-import { CheckCircle, CloudUpload, X, MessageCircleQuestionIcon } from "lucide-react";
+import {
+  CheckCircle,
+  Eye,
+  MessageCircleQuestionIcon,
+  CloudUpload,
+  X,
+  Info,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast, Toaster } from "react-hot-toast";
+import { useAccount } from 'wagmi'
+import { Contract, ethers, BrowserProvider } from 'ethers';
 import depositContractABI from "../utils/depositABI.json";
+import { prefix0X, TransactionStatus } from "../utils/helpers";
+
+const DEPOSIT_CONTRACT_ADDRESS = '0x4242424242424242424242424242424242424242';
+const PRICE_PER_VALIDATOR = 32;
 
 interface WindowWithEthereum extends Window {
   ethereum?: any;
@@ -12,62 +22,54 @@ interface WindowWithEthereum extends Window {
 
 declare let window: WindowWithEthereum;
 
-const ETHEREUM_DEPOSIT_CONTRACT_ADDRESS="0x4242424242424242424242424242424242424242"
-const PRICE_PER_VALIDATOR=32
-
 function UploadDepositData() {
   const [file, setFile] = useState<File | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [depositData, setDepositData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
   const [isDepositLoading, setIsDepositLoading] = useState(false);
   const [isDepositSuccess, setIsDepositSuccess] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   const { address, isConnected, chain } = useAccount();
-  const [provider, setProvider] = useState<BrowserProvider | null>(null);
-  const [contract, setContract] = useState<Contract | null>(null);
 
-  useEffect(() => {
-    if (window.ethereum) {
-      const newProvider = new BrowserProvider(window.ethereum);
-      setProvider(newProvider);
-
-      const newContract = new Contract(
-        ETHEREUM_DEPOSIT_CONTRACT_ADDRESS,
-        depositContractABI,
-        newProvider
-      );
-      setContract(newContract);
-    }
-  }, []);
-
-  const prefix0X = (key: string): string => {
-    return key.startsWith('0x') ? key : `0x${key}`;
+  const updateTransactionStatus = (
+    pubkey: string,
+    status: TransactionStatus,
+    txHash?: string
+  ) => {
+    // update transaction status
   };
-  
-  const startDepositTransacion = async () => {
+
+  const startDepositTransaction = async () => {
+    const provider = new BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    const contract = new Contract(
+      DEPOSIT_CONTRACT_ADDRESS,
+      depositContractABI,
+      signer
+    );
     setError(null);
     setIsDepositLoading(true);
     setIsDepositSuccess(false);
     setTxHash(null);
 
-    if (!depositData || !depositData[0] || !contract || !provider) {
-      setError("Invalid data or contract not initialized. Please try again.");
-      toast.error("Invalid data or contract not initialized. Please try again.");
+    if (depositData.pubkey === null || depositData.withdrawal_credentials === null || depositData.signature === null || depositData.deposit_data_root === null) {
+      setError("Invalid JSON file. Please upload a valid deposit data file.");
       setIsDepositLoading(false);
       return;
     }
 
     if (chain?.id !== 17000) {
       setError("Please connect to the Holesky testnet to continue.");
-      toast.error("Please connect to the Holesky testnet to continue.");
       setIsDepositLoading(false);
       return;
     }
 
     try {
+      console.log("Deposit data:", depositData);
       const gasPrice = (await provider.getFeeData()).gasPrice;
 
       const pubkey = prefix0X(depositData[0].pubkey);
@@ -87,21 +89,23 @@ function UploadDepositData() {
       );
 
       setTxHash(tx.hash);
+      updateTransactionStatus(depositData.pubkey, TransactionStatus.PENDING, tx.hash);
 
       const receipt = await tx.wait();
       if (receipt.status) {
         setIsDepositSuccess(true);
-        toast.success("Deposit transaction successful!");
+        updateTransactionStatus(depositData.pubkey, TransactionStatus.SUCCEEDED, tx.hash);
+      } else {
+        updateTransactionStatus(depositData.pubkey, TransactionStatus.FAILED, tx.hash);
       }
     } catch (error) {
-      console.error("Deposit transaction error:", error);
+      console.error("Error initiating deposit transaction:", error);
       setError("Failed to initiate deposit transaction. Please try again.");
-      toast.error("Failed to initiate deposit transaction. Please try again.");
-    } finally {
       setIsDepositLoading(false);
-    }
+      setIsDepositSuccess(false);
+    } 
   }
-  
+
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem("hasSeenUploadPopup");
     if (!hasSeenPopup) {
@@ -124,8 +128,8 @@ function UploadDepositData() {
           const jsonContent = JSON.parse(event.target?.result as string);
           setDepositData(jsonContent);
         } catch (error) {
+          console.error("Error parsing JSON file:", error);
           setError("Invalid JSON file. Please upload a valid deposit data file.");
-          toast.error("Invalid JSON file. Please upload a valid deposit data file.");
         }
       };
       reader.readAsText(file);
@@ -298,7 +302,7 @@ function UploadDepositData() {
                 />
               </div>
               <button
-                onClick={startDepositTransacion}
+                onClick={startDepositTransaction}
                 disabled={!file || !isConnected || isDepositLoading}
                 style={{
                   border: "1px solid transparent",
@@ -308,32 +312,20 @@ function UploadDepositData() {
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
-                className={`mx-auto w-[40%] grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold ${
-                  isDepositLoading || !isConnected
-                    ? "opacity-75 cursor-not-allowed"
-                    : ""
-                }`}
+                className=" grow text-white py-[6px] px-4 rounded-[6px] focus:outline-none focus:ring-1 focus:ring-orange-600 focus:ring-opacity-50 font-bold"
               >
-                {isDepositLoading ? 'Staking...' : 'Stake'}
+                {isDepositLoading ? 'Staking...' : 'Stake ETH'}
               </button>
               {isDepositSuccess && (
-                toast.success("Stake successful! Transaction hash: " + txHash))
-              }
+                <p className="text-green-500">Stake successful! Transaction hash: {txHash}</p>
+              )}
+              {error && (
+                <p className="text-red-500">{error}</p>
+              )}
             </div>
           </div>
         </div>
       </div>
-      <Toaster
-        toastOptions={{
-          style: {
-            border: "1px solid transparent",
-            borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
-            borderImageSlice: 1,
-            background: "black",
-            color: "white",
-          },
-        }}
-      />
     </div>
   );
 }
