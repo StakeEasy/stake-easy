@@ -157,6 +157,12 @@ const ValidatorDashboard: React.FC = () => {
     }
   };
 
+  const getValidatorPublicKey = () => {
+    return clusterData && clusterData.validators && clusterData.validators[0]
+      ? clusterData.validators[0].public_key
+      : '';
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(e.target.value);
   };
@@ -467,7 +473,9 @@ const ValidatorDashboard: React.FC = () => {
                   <div className="flex justify-between items-center p-3">
                     <div className="text-xs flex items-center">
                       <span className="mr-2 text-sm font-semibold">
-                        {clusterData.validators[0].public_key.slice(0, 8)}...{clusterData.validators[0].public_key.slice(-6)}
+                        {getValidatorPublicKey() 
+                          ? `${getValidatorPublicKey().slice(0, 8)}...${getValidatorPublicKey().slice(-6)}`
+                          : 'N/A'}
                       </span>
 
                       <button
@@ -483,13 +491,19 @@ const ValidatorDashboard: React.FC = () => {
                         )}
                       </button>
                     </div>
-                    <div className={`ml-[-72px] text-xs ${clusterData.validators[0].status === 'Active' ? 'text-green-500 bg-[#D5F5E3]' : 'text-red-500 bg-[#FADBD8]'} rounded-[5px] p-[5px]`}>
-                      {clusterData.validators[0].status}
+                    <div className={`ml-[-72px] text-xs ${
+                      clusterData && clusterData.validators && clusterData.validators[0] && clusterData.validators[0].status === 'Active'
+                        ? 'text-green-500 bg-[#D5F5E3]'
+                        : 'text-red-500 bg-[#FADBD8]'
+                    } rounded-[5px] p-[5px]`}>
+                      {clusterData && clusterData.validators && clusterData.validators[0] ? clusterData.validators[0].status : 'N/A'}
                     </div>
                     <div>
-                      <a href={`https://holesky.beaconcha.in/validator/${clusterData.validators[0].public_key}`} target="_blank">
-                        <ChartNoAxesCombined size={25} />
-                      </a>
+                      {getValidatorPublicKey() && (
+                        <a href={`https://holesky.beaconcha.in/validator/${getValidatorPublicKey()}`} target="_blank" rel="noopener noreferrer">
+                          <ChartNoAxesCombined size={25} />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
