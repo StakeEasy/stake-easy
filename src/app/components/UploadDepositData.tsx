@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from 'wagmi'
 import { Contract, ethers, BrowserProvider } from 'ethers';
 import depositContractABI from "../utils/depositABI.json";
-import { prefix0X, TransactionStatus } from "../utils/helpers";
 
 const DEPOSIT_CONTRACT_ADDRESS = '0x4242424242424242424242424242424242424242';
 const PRICE_PER_VALIDATOR = 32;
@@ -21,6 +20,20 @@ interface WindowWithEthereum extends Window {
 }
 
 declare let window: WindowWithEthereum;
+
+const prefix0X = (key: string): string => {
+  return `0x${key}`;
+};
+
+enum TransactionStatus {
+  'READY',
+  'PENDING',
+  'STARTED',
+  'SUCCEEDED',
+  'FAILED',
+  'LEDGER_ERROR',
+  'REJECTED',
+  }
 
 function UploadDepositData() {
   const [file, setFile] = useState<File | null>(null);

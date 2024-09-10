@@ -6,7 +6,7 @@ import { Info } from "lucide-react";
 import { Tooltip } from "antd";
 import { toast, Toaster } from "react-hot-toast";
 import { ethers, BrowserProvider } from "ethers";
-import contractABI from "../utils/ssvABI.json";
+import contractABI from "../utils/ssvNetworkABI.json";
 import { useAccount } from 'wagmi';
 import { parse } from "path";
 

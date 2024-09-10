@@ -1,5 +1,5 @@
 "use client";
-import React, { useState,useRef,useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { Tooltip } from "antd";
@@ -141,7 +141,10 @@ function Stepper() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node)
+      ) {
         closePopup();
       }
     };
@@ -216,7 +219,6 @@ function Stepper() {
       </div>
 
       <div>
-        
         <CurrentStepComponent />
       </div>
 
@@ -240,7 +242,7 @@ function Stepper() {
           onClick={nextStep}
           // disabled={isNextDisabled}
           className={`px-6 py-2 transition-colors flex items-center ${
-            isNextDisabled ? "opacity-50" : ""
+            isNextDisabled ? "opacity-50 cursor-not-allowed" : ""
           }`}
           style={{
             border: "1px solid transparent",

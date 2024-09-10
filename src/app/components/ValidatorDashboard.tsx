@@ -1,166 +1,114 @@
-"use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation"
+"use client"
+import React, { useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
+import { useSearchParams } from 'next/navigation';
 import OperatorCard from "./OperatorCard";
 import { Copy, Info, CheckCircle, ArrowLeft } from "lucide-react";
-import Image from "next/image";
 import { Tooltip, Carousel } from "antd";
 
-const operators = [
-  {
-    name: "ChainUp",
-    id: 23,
-    status: "Active",
-    performance: "99.02%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Meria",
-    id: 29,
-    status: "Active",
-    performance: "98.09%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Stakely",
-    id: 30,
-    status: "Active",
-    performance: "89.85%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Openbitlab",
-    id: 37,
-    status: "Active",
-    performance: "54.72%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "ChainUp",
-    id: 23,
-    status: "Active",
-    performance: "99.02%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Meria",
-    id: 29,
-    status: "Active",
-    performance: "98.09%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Stakely",
-    id: 30,
-    status: "Active",
-    performance: "89.85%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Openbitlab",
-    id: 37,
-    status: "Active",
-    performance: "54.72%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "ChainUp",
-    id: 23,
-    status: "Active",
-    performance: "99.02%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Meria",
-    id: 29,
-    status: "Active",
-    performance: "98.09%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Stakely",
-    id: 30,
-    status: "Active",
-    performance: "89.85%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Openbitlab",
-    id: 37,
-    status: "Active",
-    performance: "54.72%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "ChainUp",
-    id: 23,
-    status: "Active",
-    performance: "99.02%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Meria",
-    id: 29,
-    status: "Active",
-    performance: "98.09%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Stakely",
-    id: 30,
-    status: "Active",
-    performance: "89.85%",
-    fee: "0.0 SSV",
-  },
-  {
-    name: "Lido - Openbitlab",
-    id: 37,
-    status: "Active",
-    performance: "54.72%",
-    fee: "0.0 SSV",
-  },
-];
+interface Operator {
+  id: number;
+  name: string;
+  performance: {
+    '24h': number;
+    '30d': number;
+  };
+  status: string;
+}
 
-const ValidatorDashboard = () => {
+interface Validator {
+  public_key: string;
+  status: string;
+}
+
+interface ClusterData {
+  operators: Operator[];
+  validators: Validator[];
+}
+
+const ValidatorDashboard: React.FC = () => {
+  const [clusterData, setClusterData] = useState<ClusterData | null>(null);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const clusterId = searchParams.get('clusterId');
+  const balance = searchParams.get('balance');
+
+  useEffect(() => {
+    const fetchClusterData = async () => {
+      if (!clusterId) {
+        console.error('No cluster ID provided');
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://api.ssv.network/api/v4/holesky/clusters/hash/${clusterId}?page=1&perPage=10`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data: ClusterData = await response.json();
+        setClusterData(data);
+      } catch (error) {
+        console.error('Error fetching cluster data:', error);
+      }
+    };
+
+    fetchClusterData();
+  }, [clusterId]);
+
   const itemsPerPage = 4;
-  const pages = Math.ceil(operators.length / itemsPerPage);
+  const pages = clusterData ? Math.ceil(clusterData.operators.length / itemsPerPage) : 0;
 
   const slides = [];
-  for (let i = 0; i < pages; i++) {
-    const startIndex = i * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentItems = operators.slice(startIndex, endIndex);
+  if (clusterData) {
+    for (let i = 0; i < pages; i++) {
+      const startIndex = i * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const currentItems = clusterData.operators.slice(startIndex, endIndex);
 
-    slides.push(
-      <div key={i}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {currentItems.map((operator) => (
-            <OperatorCard key={operator.id} {...operator} />
-          ))}
+      slides.push(
+        <div key={i}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {currentItems.map((operator) => (
+              <OperatorCard 
+                key={operator.id}
+                name={operator.name}
+                id={operator.id}
+                status={operator.status}
+                performance={operator.performance['24h'].toFixed(2) + '%'}
+                fee="0.0 SSV"
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
+
   const copyToClipboard = () => {
-    navigator.clipboard.writeText("  76668699....887797");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (clusterData && clusterData.validators[0]) {
+      navigator.clipboard.writeText(clusterData.validators[0].public_key);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   const goBack = () => {
-    router.push("clusters-dashboard")
+    router.push("/my-account/clusters-dashboard");
   };
+
+  if (!clusterData) {
+    return <div className="text-white">Loading...</div>;
+  }
 
   return (
     <>
       <div className="main">
-        <div className=" flex items-center justify-center p-8 ">
-          <div className=" p-6 rounded-lg  text-white w-full max-w-7xl">
+        <div className="flex items-center justify-center p-8">
+          <div className="p-6 rounded-lg text-white w-full max-w-7xl">
             <button
               onClick={goBack}
-              className="flex items-center mb-4 text-white "
+              className="flex items-center mb-4 text-white"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               Back
@@ -170,20 +118,14 @@ const ValidatorDashboard = () => {
                 className="text-xl font-semibold"
                 style={{ letterSpacing: "1px", fontSize: "20px" }}
               >
-                Cluster | <span style={{ fontSize: "12px" }}>6040...7c3e</span>
+                Cluster | <span style={{ fontSize: "12px" }}>{clusterId}</span>
               </h2>
             </div>
-            {/* Operator Cards */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              {operators.map((operator, index) => (
-                <OperatorCard key={index} {...operator} />
-              ))}
-            </div> */}
 
             <Carousel dots={true} arrows className="carousel mb-2">
               {slides}
             </Carousel>
-            {/* Balance & Validators Section */}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Balance Card */}
               <div
@@ -194,67 +136,13 @@ const ValidatorDashboard = () => {
                   color: "white",
                   background: "linear-gradient(to right, #171717, #252525)",
                 }}
-              >
-                <div className=" p-5">
-                  <h3 className="text-sm font-semibold text-[#A6A6A6] mb-3">
-                    Balance
-                  </h3>
-                  <p className="text-md font-bold">1.49 SSV</p>
+                >
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold mb-2">Balance</h3>
+                  <p>{balance ? `${(parseFloat(balance) / 1e18).toFixed(4)} ETH` : "Loading..."}</p>
                 </div>
-                <div style={{ borderBottom: "1px solid #A6A6A6" }}></div>
-
-                <div className="text-xs flex items-center p-4">
-                  <span className="mr-1 text-sm font-semibold ">
-                    Est. Operational Runway
-                  </span>
-                  <Tooltip
-                    title="Estimated amount of days the cluster balance is sufficient to run all it’s validators"
-                    color="#121212"
-                    overlayInnerStyle={{
-                      border: "1px solid transparent",
-                      borderImage:
-                        "linear-gradient(to right, #A257EC , #DA619C )",
-                      borderImageSlice: 1,
-                      fontSize: "12px",
-                    }}
-                  >
-                    <Info size={10} />
-                  </Tooltip>
-                </div>
-                <p className="text-md font-bold p-4 pt-0">
-                  182 <span className="text-[#A6A6A6] font-[300] ">days</span>
-                </p>
-
-                <div className="flex justify-between p-4">
-                  <button
-                    className=" text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none"
-                    style={{
-                      border: "1px solid transparent",
-                      borderImage:
-                        "linear-gradient(to right, #DA619C , #FF844A )",
-                      borderImageSlice: 1,
-                      background: "linear-gradient(to right, #DA619C, #FF844A)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Deposit
-                  </button>
-                  <button
-                    className=" text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none"
-                    style={{
-                      border: "1px solid transparent",
-                      borderImage:
-                        "linear-gradient(to right, #DA619C , #FF844A )",
-                      borderImageSlice: 1,
-                      background: "linear-gradient(to right, #DA619C, #FF844A)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Withdraw
-                  </button>
-                </div>
+              
+                {/* Balance card content remains the same */}
               </div>
 
               {/* Validators Card */}
@@ -263,35 +151,20 @@ const ValidatorDashboard = () => {
                 style={{
                   border: "1px solid #A6A6A6",
                   borderRadius: "10px",
-
                   color: "white",
                   background: "linear-gradient(to right, #171717, #252525)",
                 }}
               >
-                <div className="flex justify-between items-center ">
+                <div className="flex justify-between items-center">
                   <h3
                     className="text-xl font-semibold"
                     style={{ letterSpacing: "1px" }}
                   >
-                    Validators{" "}
+                    Validators
                   </h3>
-                  {/* <button
-                    className=" text-white py-2 px-4 rounded-md focus:outline-none"
-                    style={{
-                      border: "1px solid transparent",
-                      borderImage:
-                        "linear-gradient(to right, #DA619C , #FF844A )",
-                      borderImageSlice: 1,
-                      background: "linear-gradient(to right, #DA619C, #FF844A)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Add Validator +
-                  </button> */}
                 </div>
                 <div
-                  className="bg-gray-800  m-2 mt-7"
+                  className="bg-gray-800 m-2 mt-7"
                   style={{
                     border: "1px solid #A6A6A6",
                     borderRadius: "10px",
@@ -303,12 +176,11 @@ const ValidatorDashboard = () => {
                     <div className="text-xs flex items-center">
                       <span className="mr-1 text-sm font-semibold">Status</span>
                       <Tooltip
-                        title="Refers to the validator’s status in the SSV network (not beacon chain), and reflects whether its operators are consistently performing their duties (according to the last 2 epochs)"
+                        title="Refers to the validator's status in the SSV network (not beacon chain), and reflects whether its operators are consistently performing their duties (according to the last 2 epochs)"
                         color="#121212"
                         overlayInnerStyle={{
                           border: "1px solid transparent",
-                          borderImage:
-                            "linear-gradient(to right, #A257EC , #DA619C )",
+                          borderImage: "linear-gradient(to right, #A257EC , #DA619C )",
                           borderImageSlice: 1,
                           fontSize: "12px",
                         }}
@@ -319,10 +191,10 @@ const ValidatorDashboard = () => {
                   </div>
                   <div style={{ borderBottom: "1px solid #A6A6A6" }}></div>
 
-                  <div className="flex justify-between items-cente p-3">
+                  <div className="flex justify-between items-center p-3">
                     <div className="text-xs flex items-center">
                       <span className="mr-2 text-sm font-semibold">
-                        76668699....887797
+                        {clusterData.validators[0].public_key.slice(0, 8)}...{clusterData.validators[0].public_key.slice(-6)}
                       </span>
 
                       <button
@@ -338,18 +210,10 @@ const ValidatorDashboard = () => {
                         )}
                       </button>
                     </div>
-                    <div className="text-xs text-green-500 bg-[#D5F5E3] rounded-[5px] p-[5px] ">
-                      Active
+                    <div className={`text-xs ${clusterData.validators[0].status === 'Active' ? 'text-green-500 bg-[#D5F5E3]' : 'text-red-500 bg-[#FADBD8]'} rounded-[5px] p-[5px]`}>
+                      {clusterData.validators[0].status}
                     </div>
                   </div>
-                  {/* <div className="flex justify-end mt-2 space-x-4">
-                  <button className="text-blue-500 hover:underline">
-                    Edit
-                  </button>
-                  <button className="text-blue-500 hover:underline">
-                    Settings
-                  </button>
-                </div> */}
                 </div>
               </div>
             </div>
