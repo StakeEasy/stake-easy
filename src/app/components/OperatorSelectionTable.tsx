@@ -93,7 +93,6 @@ export default function OperatorSelectionTable() {
 
     fetchOperators();
   }, []);
-
   // Empty dependency array ensures this runs once on mount
 
   // Function to calculate the total fee

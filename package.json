@@ -34,7 +34,8 @@
     "tailwindcss-animate": "^1.0.7",
     "viem": "^2.21.0",
     "wagmi": "^2.12.8",
-    "ssv-keys": "^1.2.0"
+    "ssv-keys": "^1.2.0",
+    "ssv-scanner": "github:ssvlabs/ssv-scanner"
   },
   "devDependencies": {
     "@types/mongodb": "^4.0.7",

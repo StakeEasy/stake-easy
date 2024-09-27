@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Copy,
-  CheckCircle,
   X,
-  Info,
   MessageCircleQuestionIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";

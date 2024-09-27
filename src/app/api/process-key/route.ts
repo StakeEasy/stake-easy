@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SSVKeys, KeyShares, KeySharesItem } from 'ssv-keys';
+import { NonceScanner } from 'ssv-scanner';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { keystoreFile, password, operatorsData } = body;
-    console.log(operatorsData, "operatorsData");
+    const { keystoreFile, password, operatorsData, ownerAddress } = body;
 
-    if (!keystoreFile || !password || !operatorsData) {
-      return NextResponse.json({ message: 'Missing keystore file or password' }, { status: 400 });
+    if (!keystoreFile || !password || !operatorsData || !ownerAddress) {
+      return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
     }
+
+    const params = {
+      network: "holesky",
+      nodeUrl: `${process.env.NEXT_PUBLIC_NODE_URL}`,
+      ownerAddress: ownerAddress,
+    };
+
+    const nonceScanner = new NonceScanner(params);
+    const ownerNonce = await nonceScanner.run();
 
     console.log('Starting keystore processing...');
 
@@ -20,28 +29,22 @@ export async function POST(req: NextRequest) {
     console.log('Extracting keys from keystore...');
     const { publicKey, privateKey } = await ssvKeys.extractKeys(keystoreFile, password);
 
-    console.log('Keys extracted:', { publicKey, privateKey });
 
     const operators = operatorsData.map((operator: { id: any; address: any; }) => ({
       id: operator.id,
       operatorKey: operator.address,
     }));
 
-    console.log('Operators:', operators);
-
     console.log('Building shares with operators...');
     const encryptedShares = await ssvKeys.buildShares(privateKey, operators);
-
     console.log('Shares built successfully.');
-
-    const TEST_OWNER_NONCE = 1;
-    const TEST_OWNER_ADDRESS = '0x81592c3de184a3e2c0dcb5a261bc107bfa91f494';
 
     console.log('Building payload...');
     const payload = await keySharesItem.buildPayload(
       { publicKey, operators, encryptedShares },
-      { ownerAddress: TEST_OWNER_ADDRESS, ownerNonce: TEST_OWNER_NONCE, privateKey }
+      { ownerAddress, ownerNonce, privateKey }
     );
+    console.log('Payload:', payload);
 
     console.log('Payload built successfully.');
 

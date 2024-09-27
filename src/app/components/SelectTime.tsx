@@ -56,22 +56,6 @@ const StakingInterface = ({ goBack, parsedPayload, operatorsData, totalFee }: Se
     setShowTxDetails(false);
   };
 
-  // const getNetworkFee = () => {
-  //   if (selectedPeriod === "6 Months") {
-  //     setNetFee(0.5);
-  //     setNDays(182);
-  //   } else if (selectedPeriod === "1 Year") {
-  //     setNetFee(1);
-  //     setNDays(365);
-  //   } else {
-  //     setNetFee(Number(((Number(customPeriod) / 365) * 1).toFixed(5)));
-  //     setNDays(Number(customPeriod));  
-  //   }
-  //   // console.log("netFee: ", netFee);
-  //   // console.log("nDays: ", nDays);
-  //   return netFee;
-  // };
-
   const handleRowClick = (period: string) => {
     if (selectedPeriod === period) {
       // Unselect if the same period is clicked

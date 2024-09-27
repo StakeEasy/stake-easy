@@ -1,4 +1,3 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { MongoClient } from "mongodb";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -7,7 +6,7 @@ const client = new MongoClient(uri);
 
 export async function POST(req: NextRequest) {
   try {
-    console.log("API");
+    // console.log("API");
     const body = await req.json();
     const { walletAddress, eigenPodAddress } = body;
 

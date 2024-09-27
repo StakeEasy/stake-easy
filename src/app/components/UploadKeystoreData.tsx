@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useAccount } from "wagmi";
 import {
   CheckCircle,
   Eye,
   EyeOff,
   CloudUpload,
-  X,
-  Info,
   ArrowLeft,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import SelectTime from "./SelectTime";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -31,7 +29,7 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
   const [showPassword, setShowPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [showSelectTime, setShowSelectTime] = useState(false);
-
+  const { address } = useAccount();
   const [step, setStep] = useState<STEPS>(STEPS.START);
   const [keySharesData, setKeyShares] = useState<string>('');
   const [finalPayload, setFinalPayload] = useState<string>('');
@@ -39,18 +37,17 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
   const [parsedPayload, setParsedPayload] = useState<any>({});
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // console.log("operatorsData",operatorsData);
   const generateKeyShares  = async () => {
     setIsGenerating(true);
     setStep(STEPS.DECRYPT_KEYSTORE);
-
+    
     try {
       const response = await fetch('/api/process-key', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ keystoreFile, password, operatorsData }),
+        body: JSON.stringify({ keystoreFile, password, operatorsData, ownerAddress: address }),
       });
       console.log("response: ", response);
 
@@ -68,7 +65,7 @@ function UploadKeystoreData({ goBack, operatorsData ,totalFee }: UploadKeystoreD
         toast.error('Invalid JSON response from server');
       }
   
-      // console.log("Parsed data:", data);
+      console.log("Parsed data:", data);
 
       setFinalPayload(JSON.stringify(data.payload));
       setKeyShares(JSON.stringify(data.keyShares));

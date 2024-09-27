@@ -3,7 +3,6 @@ import { toast, Toaster } from "react-hot-toast";
 import {
   X,
   Copy,
-  CheckCircle,
   ArrowLeft,
   ChevronRight,
   MessageCircleQuestionIcon,
@@ -19,7 +18,6 @@ function KeyGeneration() {
   const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if the user has already seen the main popup
     const hasSeenPopup = localStorage.getItem("hasSeenKeyGenPopup");
     if (!hasSeenPopup) {
       setPopupType("main");

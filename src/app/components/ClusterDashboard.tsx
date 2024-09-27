@@ -98,9 +98,6 @@ const ClusterDashboard: React.FC = () => {
     return balanceInEth.toFixed(4) + " ETH";
   };
 
-  // if (loading) return <div className="text-white">Loading...</div>;
-  // if (error) return <div className="text-white">Error: {error}</div>;
-
   if (loading)
     return (
       <div

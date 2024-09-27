@@ -7,8 +7,6 @@ import { Tooltip } from "antd";
 import { toast, Toaster } from "react-hot-toast";
 import { ethers, BrowserProvider } from "ethers";
 import contractABI from "../utils/ssvNetworkABI.json";
-import { useAccount } from 'wagmi';
-import { parse } from "path";
 
 interface TransactionProps {
   goBack: () => void;
@@ -23,7 +21,6 @@ const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
-    // navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -35,7 +32,8 @@ const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const pubkey = parsedPayload.publicKey.slice(0,4) + "..." + parsedPayload.publicKey.slice(-4);
+  const pubkey = parsedPayload.publicKey.slice(0,6) + "..." + parsedPayload.publicKey.slice(-6);
+  const fullPubkey = parsedPayload.publicKey;
 
   const handleContractInteraction = async (parsedPayload: any) => {
     try {
@@ -51,10 +49,9 @@ const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays
         const signer = await provider.getSigner();
         const contract = new ethers.Contract(contractAddress, contractABI, signer);  
         
-
         const { publicKey, operatorIds, sharesData } = parsedPayload;
         
-        const amount = ethers.parseEther("1.5"); // Convert 1.5 SSV to Wei
+        const amount = ethers.parseEther(`${totalFee + networkFee + 1}`); // Convert 1.5 SSV to Wei
         const cluster = [0, 0, 0, true, 0];
         
         // Execute contract function
@@ -99,7 +96,7 @@ const Tx = ({ goBack, parsedPayload, operatorsData, totalFee, networkFee, noDays
             <button
               className="text-gray-400 hover:text-white"
               onClick={() => {
-                handleCopy(pubkey);
+                handleCopy(fullPubkey);
               }}
             >
               <Copy className="w-4 h-4" />

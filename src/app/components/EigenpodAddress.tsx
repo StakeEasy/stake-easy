@@ -121,12 +121,12 @@ const EigenpodAddress: React.FC = () => {
         },
         body: JSON.stringify({ walletAddress, eigenPodAddress }),
       });
-      if (!response.ok) {
-        // console.error("Failed to store addresses:", response.statusText);
-        // toast.error("Error storing addresses.");
-      } else {
-        // console.log("Addresses stored successfully.");
-      }
+      // if (!response.ok) {
+      //   console.error("Failed to store addresses:", response.statusText);
+      //   toast.error("Error storing addresses.");
+      // } else {
+      //   console.log("Addresses stored successfully.");
+      // }
     } catch (error) {
       // console.error("Error in storing addresses:", error);
       // toast.error("Error in storing addresses.");
@@ -377,4 +377,5 @@ const EigenpodAddress: React.FC = () => {
     </div>
   );
 };
+
 export default EigenpodAddress;

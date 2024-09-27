@@ -107,15 +107,6 @@ const Landing = () => {
                   >
                     Prerequisite 1
                   </h1>
-                  {/* <button
-                    onClick={closePopup}
-                    className="absolute top-2 right-2 text-[#FC8150]"
-                    style={{
-                      fontSize: "20px",
-                    }}
-                  >
-                    <X size={20} />
-                  </button> */}
                 </div>
 
                 <div className="flex gap-2 items-center">
